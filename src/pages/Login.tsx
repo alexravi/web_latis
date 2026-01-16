@@ -1,0 +1,121 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import GridBackground from '../features/landing/GridBackground';
+
+const Login: React.FC = () => {
+    return (
+        <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+            {/* Background Grid (Subtle) */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: -1 }}>
+                <GridBackground />
+            </div>
+
+            {/* Left Panel: Form */}
+            <div style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.95)',
+                borderRight: '1px solid var(--color-grid)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                padding: '0 8vw',
+                position: 'relative'
+            }}>
+                {/* Back Home */}
+                <Link to="/" style={{
+                    position: 'absolute',
+                    top: '40px',
+                    left: '40px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    color: 'var(--color-text-muted)'
+                }}>
+                    return to latis_home
+                </Link>
+
+                <div style={{ maxWidth: '400px', width: '100%' }}>
+                    <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1 }}>PROVIDER PORTAL</h1>
+                    <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginBottom: '3rem' }}>
+                        SECURE CLINICAL ACCESS
+                    </p>
+
+                    <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div>
+                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                                MEDICAL ID (EMAIL)
+                            </label>
+                            <input type="email" style={{
+                                width: '100%',
+                                padding: '12px',
+                                border: '1px solid var(--color-fg)',
+                                borderRadius: '0',
+                                fontSize: '1rem',
+                                outline: 'none',
+                                fontFamily: 'var(--font-mono)'
+                            }} placeholder="doctor@hospital.org" />
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                                PASSWORD
+                            </label>
+                            <input type="password" style={{
+                                width: '100%',
+                                padding: '12px',
+                                border: '1px solid var(--color-fg)',
+                                borderRadius: '0',
+                                fontSize: '1rem',
+                                outline: 'none'
+                            }} />
+                        </div>
+
+                        <button type="button" style={{
+                            marginTop: '1rem',
+                            padding: '16px',
+                            background: 'var(--color-accent)',
+                            color: 'white',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.05em',
+                            border: '1px solid var(--color-accent)',
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                        }}>
+                            SECURE SIGN IN
+                        </button>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', fontSize: '0.9rem' }}>
+                            <a href="#" style={{ color: 'var(--color-text-muted)' }}>Forgot Credentials?</a>
+                            <Link to="/signup" style={{ color: 'var(--color-fg)', fontWeight: 600 }}>Apply for Access →</Link>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {/* Right Panel: Decorative / Info (Hidden on mobile) */}
+            <div className="nav-desktop" style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.4)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                borderLeft: '1px solid white'
+            }}>
+                <div style={{ maxWidth: '400px', textAlign: 'center' }}>
+                    <div style={{
+                        width: '80px',
+                        height: '80px',
+                        background: 'var(--color-accent)',
+                        margin: '0 auto 2rem auto'
+                    }}></div>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>SECURE ENVIRONMENT</h2>
+                    <p style={{ color: 'var(--color-text-muted)' }}>
+                        You are entering a restricted clinical network. All activities are encrypted and logged.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Login;

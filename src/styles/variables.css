@@ -1,0 +1,40 @@
+/* Design Tokens */
+:root {
+    /* Colors */
+    --primary-color: #646cff;
+    /* Example primary color */
+    --primary-hover: #535bf2;
+
+    --bg-color: #242424;
+    --text-color: rgba(255, 255, 255, 0.87);
+
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+
+    /* Typography */
+    --font-family-base: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    --font-size-base: 16px;
+    --font-size-lg: 1.125rem;
+    --font-size-sm: 0.875rem;
+
+    /* Spacing */
+    --spacing-1: 0.25rem;
+    --spacing-2: 0.5rem;
+    --spacing-4: 1rem;
+    --spacing-8: 2rem;
+
+    /* Borders */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-color: #ffffff;
+        --text-color: #213547;
+    }
+}

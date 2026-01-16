@@ -1,0 +1,37 @@
+.layout-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.layout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: var(--gray-800);
+    border-bottom: 1px solid var(--gray-700);
+}
+
+.layout-header nav a {
+    margin-left: 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.layout-header nav a:hover {
+    text-decoration: underline;
+}
+
+.layout-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.layout-footer {
+    padding: 1rem;
+    text-align: center;
+    background-color: var(--gray-800);
+    margin-top: auto;
+}

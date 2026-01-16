@@ -1,0 +1,73 @@
+:root {
+  /* Color System - Swiss Clinical */
+  --color-bg: #FFFFFF;
+  --color-fg: #000000;
+  --color-grid: #E5E5E5;
+  --color-accent: #0066CC;
+  /* International Klein Blue */
+  --color-accent-subtle: #F0F5FF;
+
+  --color-text-main: #000000;
+  --color-text-muted: #666666;
+
+  /* Typography */
+  --font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  --spacing-unit: 8px;
+  --grid-size: 40px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--color-fg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+/* Utilities */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.grid-border {
+  border: 1px solid var(--color-grid);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: -0.05em;
+}
