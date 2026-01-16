@@ -71,3 +71,51 @@ button {
   font-family: var(--font-mono);
   letter-spacing: -0.05em;
 }
+
+/* Header Utilities */
+.nav-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .nav-desktop {
+    display: flex;
+  }
+}
+
+.nav-link {
+  color: var(--color-fg);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.nav-link:hover {
+  opacity: 1;
+}
+
+/* Response Utilities */
+@media (max-width: 768px) {
+  .grid-stack-mobile {
+    grid-template-columns: 1fr !important;
+  }
+
+  .flex-col-mobile {
+    flex-direction: column !important;
+  }
+
+  .pad-mobile-relaxed {
+    padding-top: 100px !important;
+    padding-bottom: 60px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+
+  .text-mobile-adjust {
+    font-size: 2rem !important;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
