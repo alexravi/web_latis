@@ -13,7 +13,7 @@ const Login: React.FC = () => {
             {/* Left Panel: Form */}
             <div style={{
                 flex: 1,
-                background: 'rgba(255,255,255,0.95)',
+                background: 'var(--color-bg)',
                 borderRight: '1px solid var(--color-grid)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -34,20 +34,22 @@ const Login: React.FC = () => {
                 </Link>
 
                 <div style={{ maxWidth: '400px', width: '100%' }}>
-                    <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1 }}>PROVIDER PORTAL</h1>
+                    <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1, color: 'var(--color-fg)' }}>PROVIDER PORTAL</h1>
                     <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginBottom: '3rem' }}>
                         SECURE CLINICAL ACCESS
                     </p>
 
                     <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div>
-                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 MEDICAL ID (EMAIL)
                             </label>
                             <input type="email" style={{
                                 width: '100%',
                                 padding: '12px',
-                                border: '1px solid var(--color-fg)',
+                                border: '1px solid var(--color-grid)',
+                                background: 'var(--color-bg)',
+                                color: 'var(--color-text-main)',
                                 borderRadius: '0',
                                 fontSize: '1rem',
                                 outline: 'none',
@@ -56,13 +58,15 @@ const Login: React.FC = () => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 PASSWORD
                             </label>
                             <input type="password" style={{
                                 width: '100%',
                                 padding: '12px',
-                                border: '1px solid var(--color-fg)',
+                                border: '1px solid var(--color-grid)',
+                                background: 'var(--color-bg)',
+                                color: 'var(--color-text-main)',
                                 borderRadius: '0',
                                 fontSize: '1rem',
                                 outline: 'none'
@@ -89,7 +93,7 @@ const Login: React.FC = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', fontSize: '0.9rem' }}>
                             <a href="#" style={{ color: 'var(--color-text-muted)' }}>Forgot Credentials?</a>
-                            <Link to="/signup" style={{ color: 'var(--color-fg)', fontWeight: 600 }}>Apply for Access →</Link>
+                            <Link to="/signup" style={{ color: 'var(--color-text-main)', fontWeight: 600 }}>Apply for Access →</Link>
                         </div>
                     </form>
                 </div>
@@ -98,11 +102,11 @@ const Login: React.FC = () => {
             {/* Right Panel: Decorative / Info (Hidden on mobile) */}
             <div className="nav-desktop" style={{
                 flex: 1,
-                background: 'rgba(255,255,255,0.4)',
+                background: 'var(--color-accent-subtle)',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexDirection: 'column',
-                borderLeft: '1px solid white'
+                borderLeft: '1px solid var(--color-grid)'
             }}>
                 <div style={{ maxWidth: '400px', textAlign: 'center' }}>
                     <div style={{

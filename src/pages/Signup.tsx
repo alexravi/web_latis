@@ -12,7 +12,7 @@ const Signup: React.FC = () => {
             {/* Left Panel: Form */}
             <div style={{
                 flex: 1,
-                background: 'rgba(255,255,255,0.95)',
+                background: 'var(--color-bg)',
                 borderRight: '1px solid var(--color-grid)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -32,7 +32,7 @@ const Signup: React.FC = () => {
                 </Link>
 
                 <div style={{ maxWidth: '450px', width: '100%' }}>
-                    <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1 }}>PROVIDER REGISTRATION</h1>
+                    <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1, color: 'var(--color-fg)' }}>PROVIDER REGISTRATION</h1>
                     <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginBottom: '3rem' }}>
                         CREDENTIAL VERIFICATION REQUIRED
                     </p>
@@ -40,26 +40,30 @@ const Signup: React.FC = () => {
                     <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div>
-                                <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                                <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                     FIRST NAME
                                 </label>
                                 <input type="text" style={{
                                     width: '100%',
                                     padding: '12px',
-                                    border: '1px solid var(--color-fg)',
+                                    border: '1px solid var(--color-grid)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text-main)',
                                     borderRadius: '0',
                                     fontSize: '1rem',
                                     outline: 'none'
                                 }} />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                                <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                     LAST NAME
                                 </label>
                                 <input type="text" style={{
                                     width: '100%',
                                     padding: '12px',
-                                    border: '1px solid var(--color-fg)',
+                                    border: '1px solid var(--color-grid)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text-main)',
                                     borderRadius: '0',
                                     fontSize: '1rem',
                                     outline: 'none'
@@ -68,13 +72,15 @@ const Signup: React.FC = () => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 EMAIL
                             </label>
                             <input type="email" style={{
                                 width: '100%',
                                 padding: '12px',
-                                border: '1px solid var(--color-fg)',
+                                border: '1px solid var(--color-grid)',
+                                background: 'var(--color-bg)',
+                                color: 'var(--color-text-main)',
                                 borderRadius: '0',
                                 fontSize: '1rem',
                                 outline: 'none',
@@ -83,13 +89,15 @@ const Signup: React.FC = () => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 CREATE PASSWORD
                             </label>
                             <input type="password" style={{
                                 width: '100%',
                                 padding: '12px',
-                                border: '1px solid var(--color-fg)',
+                                border: '1px solid var(--color-grid)',
+                                background: 'var(--color-bg)',
+                                color: 'var(--color-text-main)',
                                 borderRadius: '0',
                                 fontSize: '1rem',
                                 outline: 'none'
@@ -99,12 +107,12 @@ const Signup: React.FC = () => {
                         <button type="button" style={{
                             marginTop: '1rem',
                             padding: '16px',
-                            background: 'var(--color-fg)',
+                            background: 'var(--color-accent)',
                             color: 'white',
                             fontSize: '1rem',
                             fontWeight: 600,
                             letterSpacing: '0.05em',
-                            border: '1px solid var(--color-fg)',
+                            border: '1px solid var(--color-accent)',
                             cursor: 'pointer',
                             textAlign: 'center'
                         }}>
@@ -121,12 +129,12 @@ const Signup: React.FC = () => {
             {/* Right Panel */}
             <div className="nav-desktop" style={{
                 flex: 1,
-                background: 'var(--color-fg)',
+                background: 'var(--color-accent)',
                 color: 'white',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexDirection: 'column',
-                borderLeft: '1px solid white',
+                borderLeft: '1px solid rgba(255,255,255,0.1)',
                 padding: '4rem'
             }}>
                 <h2 style={{ fontSize: '3rem', lineHeight: 1, marginBottom: '2rem' }}>
