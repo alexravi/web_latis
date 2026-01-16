@@ -1,8 +1,42 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import GridBackground from '../features/landing/GridBackground';
+import api from '../services/api';
+import toast from 'react-hot-toast';
 
 const Login: React.FC = () => {
+    const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const response = await api.post('/auth/signin', {
+                email,
+                password
+            });
+
+            if (response.data.success) {
+                localStorage.setItem('token', response.data.token);
+                // Optionally store user info
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+
+                toast.success('Successfully logged in');
+                navigate('/dashboard');
+            }
+        } catch (error: any) {
+            console.error('Login error:', error);
+            const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
+            toast.error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
             {/* Background Grid (Subtle) */}
@@ -39,57 +73,73 @@ const Login: React.FC = () => {
                         SECURE CLINICAL ACCESS
                     </p>
 
-                    <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div>
                             <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 MEDICAL ID (EMAIL)
                             </label>
-                            <input type="email" style={{
-                                width: '100%',
-                                padding: '12px',
-                                border: '1px solid var(--color-grid)',
-                                background: 'var(--color-bg)',
-                                color: 'var(--color-text-main)',
-                                borderRadius: '0',
-                                fontSize: '1rem',
-                                outline: 'none',
-                                fontFamily: 'var(--font-mono)'
-                            }} placeholder="doctor@hospital.org" />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    border: '1px solid var(--color-grid)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text-main)',
+                                    borderRadius: '0',
+                                    fontSize: '1rem',
+                                    outline: 'none',
+                                    fontFamily: 'var(--font-mono)'
+                                }}
+                                placeholder="doctor@hospital.org"
+                            />
                         </div>
 
                         <div>
                             <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 PASSWORD
                             </label>
-                            <input type="password" style={{
-                                width: '100%',
-                                padding: '12px',
-                                border: '1px solid var(--color-grid)',
-                                background: 'var(--color-bg)',
-                                color: 'var(--color-text-main)',
-                                borderRadius: '0',
-                                fontSize: '1rem',
-                                outline: 'none'
-                            }} />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    border: '1px solid var(--color-grid)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text-main)',
+                                    borderRadius: '0',
+                                    fontSize: '1rem',
+                                    outline: 'none'
+                                }}
+                            />
                         </div>
 
-                        <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-                            <button type="button" style={{
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{
                                 width: '100%',
                                 marginTop: '1rem',
                                 padding: '16px',
-                                background: 'var(--color-accent)',
+                                background: loading ? 'var(--color-text-muted)' : 'var(--color-accent)',
                                 color: 'white',
                                 fontSize: '1rem',
                                 fontWeight: 600,
                                 letterSpacing: '0.05em',
-                                border: '1px solid var(--color-accent)',
-                                cursor: 'pointer',
-                                textAlign: 'center'
-                            }}>
-                                SECURE SIGN IN
-                            </button>
-                        </Link>
+                                border: 'none',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                textAlign: 'center',
+                                opacity: loading ? 0.7 : 1
+                            }}
+                        >
+                            {loading ? 'SIGNING IN...' : 'SECURE SIGN IN'}
+                        </button>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', fontSize: '0.9rem' }}>
                             <a href="#" style={{ color: 'var(--color-text-muted)' }}>Forgot Credentials?</a>
