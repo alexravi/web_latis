@@ -1,71 +1,89 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const GridBackground: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const mouseRef = useRef({ x: 0, y: 0 });
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const resize = () => {
+        // Function to get CSS variable value
+        const getVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+        const drawBioMesh = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            draw(ctx, canvas.width, canvas.height);
-        };
 
-        const draw = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-            ctx.clearRect(0, 0, width, height);
+            // Get current theme colors
+            const bgBase = getVar('--color-bg');
+            // We need to approximate the gradient colors based on the theme
+            // Since canvas gradients don't take CSS vars directly without parsing,
+            // we'll keep it simple: match the bg variable.
 
-            const gridSize = 40;
+            // Note: For a true gradient in canvas using CSS vars, we'd need to convert hex to rgb...
+            // Instead, we will use the --color-bg as the base fill.
+
+            ctx.fillStyle = bgBase;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Hexagonal Grid (Organic Structure)
+            const a = 2 * Math.PI / 6;
+            const r = 30; // radius
+
+            // Use accent color but very transparent
+            // We can't easily parse current hex to rgba here without a helper, 
+            // so we will rely on a generic low-opacity overlay or hardcode a 'dark/light' check?
+            // Better strategy: Use the grid color var.
+
+            const gridColor = getVar('--color-grid');
+
+            // If gridColor is hex, we want it faint.
+            // Let's assume the grid var is the stroke color.
+            ctx.strokeStyle = gridColor;
+            ctx.globalAlpha = 0.3; // Make it subtle
             ctx.lineWidth = 1;
-            ctx.strokeStyle = '#F0F0F0';
 
-            // Draw Grid
-            for (let x = 0; x <= width; x += gridSize) {
+            const drawHexagon = (x: number, y: number) => {
                 ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, height);
+                for (let i = 0; i < 6; i++) {
+                    ctx.lineTo(x + r * Math.cos(a * i), y + r * Math.sin(a * i));
+                }
+                ctx.closePath();
                 ctx.stroke();
+            };
+
+            const yOffset = r * Math.sin(a);
+            const xOffset = r * (1 + Math.cos(a));
+
+            for (let y = 0; y < canvas.height + r; y += 2 * yOffset) {
+                for (let x = 0, j = 0; x < canvas.width + r; x += xOffset, j++) {
+                    drawHexagon(x, y + (j % 2 === 0 ? yOffset : 0));
+                }
             }
-            for (let y = 0; y <= height; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
-                ctx.stroke();
-            }
 
-            // Draw "Active" Highlights nearby mouse
-            const mx = mouseRef.current.x;
-            const my = mouseRef.current.y;
-
-            // Snap mouse to grid
-            const gx = Math.floor(mx / gridSize) * gridSize;
-            const gy = Math.floor(my / gridSize) * gridSize;
-
-            ctx.fillStyle = 'rgba(0, 102, 204, 0.05)'; // Subtle blue highlight
-            ctx.fillRect(gx, 0, gridSize, height); // Column highlight
-            ctx.fillRect(0, gy, width, gridSize); // Row highlight
-
-            ctx.fillStyle = '#0066CC'; // Crosshair center
-            ctx.fillRect(gx - 2, gy - 2, 4, 4);
+            // Reset alpha
+            ctx.globalAlpha = 1.0;
         };
 
-        const handleMouseMove = (e: MouseEvent) => {
-            mouseRef.current = { x: e.clientX, y: e.clientY };
-            draw(ctx, canvas.width, canvas.height);
-        };
+        // Draw initially
+        drawBioMesh();
 
-        window.addEventListener('resize', resize);
-        window.addEventListener('mousemove', handleMouseMove);
+        // Redraw on resize
+        const handleResize = () => drawBioMesh();
+        window.addEventListener('resize', handleResize);
 
-        resize();
+        // Observer for theme changes (attribute changes on html element)
+        const observer = new MutationObserver(() => {
+            drawBioMesh();
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
         return () => {
-            window.removeEventListener('resize', resize);
-            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('resize', handleResize);
+            observer.disconnect();
         };
     }, []);
 
@@ -78,8 +96,8 @@ const GridBackground: React.FC = () => {
                 left: 0,
                 width: '100vw',
                 height: '100vh',
-                zIndex: -1,
-                background: 'var(--color-bg)',
+                pointerEvents: 'none',
+                zIndex: -1
             }}
         />
     );
