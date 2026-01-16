@@ -2,7 +2,7 @@ import React from 'react';
 
 const HeroSection: React.FC = () => {
     return (
-        <section style={{
+        <section className="pad-mobile-relaxed" style={{
             paddingTop: '180px',
             paddingBottom: '120px',
             paddingLeft: '5vw',

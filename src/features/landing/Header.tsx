@@ -43,7 +43,7 @@ const Header: React.FC = () => {
                         fontFamily: 'var(--font-mono)',
                     }}>PROVIDER LOG IN</button>
                 </Link>
-                <Link to="/signup" style={{ textDecoration: 'none' }}>
+                <Link to="/signup" className="hide-on-mobile" style={{ textDecoration: 'none' }}>
                     <button style={{
                         fontSize: '0.85rem',
                         padding: '8px 16px',

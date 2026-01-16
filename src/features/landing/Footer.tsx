@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
             background: 'var(--color-fg)',
             color: 'var(--color-bg)',
         }}>
-            <div style={{
+            <div className="grid-stack-mobile" style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
                 gap: '4rem',
