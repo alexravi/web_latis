@@ -69,20 +69,23 @@ const Login: React.FC = () => {
                             }} />
                         </div>
 
-                        <button type="button" style={{
-                            marginTop: '1rem',
-                            padding: '16px',
-                            background: 'var(--color-accent)',
-                            color: 'white',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            letterSpacing: '0.05em',
-                            border: '1px solid var(--color-accent)',
-                            cursor: 'pointer',
-                            textAlign: 'center'
-                        }}>
-                            SECURE SIGN IN
-                        </button>
+                        <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                            <button type="button" style={{
+                                width: '100%',
+                                marginTop: '1rem',
+                                padding: '16px',
+                                background: 'var(--color-accent)',
+                                color: 'white',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                letterSpacing: '0.05em',
+                                border: '1px solid var(--color-accent)',
+                                cursor: 'pointer',
+                                textAlign: 'center'
+                            }}>
+                                SECURE SIGN IN
+                            </button>
+                        </Link>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', fontSize: '0.9rem' }}>
                             <a href="#" style={{ color: 'var(--color-text-muted)' }}>Forgot Credentials?</a>
