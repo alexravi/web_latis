@@ -1,6 +1,8 @@
 import React from 'react';
 import AppHeader from './AppHeader';
 import GridBackground from '../landing/GridBackground';
+import SEO from '../../components/SEO';
+import ProfileCompletionWidget from './components/ProfileCompletionWidget';
 
 const Dashboard: React.FC = () => {
     // Mock Data for "People-First" Medical Network
@@ -56,6 +58,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div style={{ position: 'relative', zIndex: 1 }}>
+                <SEO title="Dashboard" description="Your professional medical dashboard." />
                 <AppHeader />
 
                 <main className="container" style={{
@@ -101,6 +104,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+                        <ProfileCompletionWidget />
                     </div>
 
                     {/* CENTER COLUMN: FEED (6 cols) */}
