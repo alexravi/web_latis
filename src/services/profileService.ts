@@ -143,5 +143,121 @@ export const updateProfile = async (data: CompleteProfileData) => {
 
 export const getProfile = async () => {
     const response = await api.get('/users/me/profile/complete');
+    const data = response.data;
+
+    // Check if response matches the "API 3" structure (nested professional object)
+    if (data.data && data.data.professional) {
+        // Flatten it for frontend components which expect keys at root
+        const { user, profile, professional } = data.data;
+        return {
+            user,
+            profile,
+            ...professional
+        };
+    }
+
+    // Fallback/Legacy structure
+    return data;
+};
+
+export const getUserProfileById = async (id: string | number) => {
+    const response = await api.get(`/users/${id}`);
+    const data = response.data;
+
+    // API 2: Response structure { success: true, user: { ... } }
+    // We return similar structure but likely without professional details arrays
+    if (data.user) {
+        return {
+            user: data.user,
+            profile: data.user.profile || {},
+            // Default arrays to empty for safety in ProfileView
+            experiences: [],
+            education: [],
+            skills: [],
+            certifications: [],
+            publications: [],
+            projects: [],
+            awards: []
+        };
+    }
+    return data;
+};
+// --- Granular APIs ---
+
+// Basic Info
+export const updateBasicInfo = async (data: Partial<UserProfile> & Partial<ExtendedProfile>) => {
+    // We split this into two calls if needed, or assume backend handles 'me' update for user fields
+    // and 'me/profile' for profile fields. For now, let's assume 'me/profile' can handle extended fields
+    // and 'me' handles basic user fields.
+
+    // 1. Update User fields (Headline, Location, etc.)
+    if (data.headline || data.location || data.current_role || data.specialization) {
+        await api.put('/users/me', data);
+    }
+
+    // 2. Update Profile fields (Bio, etc.)
+    if (data.bio || data.summary || data.languages || data.interests) {
+        await api.put('/users/me/profile', data);
+    }
+
+    return true;
+};
+
+// Experience
+export const addExperience = async (data: Experience) => {
+    const response = await api.post('/users/me/experiences', data);
+    return response.data;
+};
+
+export const updateExperience = async (id: number | string, data: Experience) => {
+    const response = await api.put(`/users/me/experiences/${id}`, data);
+    return response.data;
+};
+
+export const deleteExperience = async (id: number | string) => {
+    const response = await api.delete(`/users/me/experiences/${id}`);
+    return response.data;
+};
+
+// Education
+export const addEducation = async (data: Education) => {
+    const response = await api.post('/users/me/education', data);
+    return response.data;
+};
+
+export const updateEducation = async (id: number | string, data: Education) => {
+    const response = await api.put(`/users/me/education/${id}`, data);
+    return response.data;
+};
+
+export const deleteEducation = async (id: number | string) => {
+    const response = await api.delete(`/users/me/education/${id}`);
+    return response.data;
+};
+
+// Skills
+export const addSkill = async (data: Skill) => {
+    const response = await api.post('/users/me/skills', data);
+    return response.data;
+};
+
+export const deleteSkill = async (id: number | string) => {
+    const response = await api.delete(`/users/me/skills/${id}`);
+    return response.data;
+};
+
+// Certifications
+export const addCertification = async (data: Certification) => {
+    const response = await api.post('/users/me/certifications', data);
+    return response.data;
+};
+
+export const updateCertification = async (id: number | string, data: Certification) => {
+    const response = await api.put(`/users/me/certifications/${id}`, data);
+    return response.data;
+};
+
+export const deleteCertification = async (id: number | string) => {
+    const response = await api.delete(`/users/me/certifications/${id}`);
     return response.data;
 };

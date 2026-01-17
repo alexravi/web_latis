@@ -3,10 +3,31 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { getProfile } from '../../services/profileService';
 
 const AppHeader: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+
+    const [userProfile, setUserProfile] = React.useState<any>(null);
+
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                // converted from dynamic import
+                const data = await getProfile();
+                setUserProfile(data);
+            } catch (error) {
+                console.error('Failed to fetch header profile:', error);
+            }
+        };
+        fetchProfile();
+    }, []);
+
+    const name = userProfile?.user?.last_name ? `Dr. ${userProfile.user.last_name}` : 'User';
+    const initials = userProfile?.user?.first_name && userProfile?.user?.last_name
+        ? `${userProfile.user.first_name[0]}${userProfile.user.last_name[0]}`
+        : 'U';
 
     const handleLogout = async () => {
         try {
@@ -99,6 +120,22 @@ const AppHeader: React.FC = () => {
                         {item.label}
                     </div>
                 ))}
+                <Link to="/profile" style={{ textDecoration: 'none' }}>
+                    <div style={{
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0 16px',
+                        borderBottom: location.pathname === '/profile' ? '2px solid var(--color-accent)' : '2px solid transparent',
+                        cursor: 'pointer',
+                        color: location.pathname === '/profile' ? 'var(--color-fg)' : 'var(--color-text-muted)',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        fontFamily: 'var(--font-mono)'
+                    }}>
+                        PROFILE
+                    </div>
+                </Link>
             </nav>
 
             {/* RIGHT: PROFILE */}
@@ -108,7 +145,7 @@ const AppHeader: React.FC = () => {
                     fontSize: '0.8rem',
                     lineHeight: 1.2
                 }} className="hide-on-mobile">
-                    <div style={{ fontWeight: 600 }}>Dr. Chen</div>
+                    <div style={{ fontWeight: 600 }}>{name}</div>
                     <div style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>ONLINE</div>
                 </div>
                 <div style={{
@@ -122,7 +159,7 @@ const AppHeader: React.FC = () => {
                     fontSize: '0.8rem',
                     fontWeight: 600
                 }}>
-                    SC
+                    {initials}
                 </div>
 
                 <button onClick={handleLogout} style={{
