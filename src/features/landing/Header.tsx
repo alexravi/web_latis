@@ -24,7 +24,7 @@ const Header: React.FC = () => {
                     height: '20px',
                     backgroundColor: 'var(--color-accent)',
                 }}></div>
-                <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.05em' }}>LATIS_OS</span>
+                <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.05em' }}>LATIS</span>
             </div>
 
             <nav className="nav-desktop" style={{ gap: '2rem', fontSize: '0.85rem' }}>

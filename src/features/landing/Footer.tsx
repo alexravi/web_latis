@@ -17,10 +17,8 @@ const Footer: React.FC = () => {
             }}>
                 <div>
                     <h2 style={{ fontSize: '2rem', marginBottom: '2rem', color: 'white' }}>LATIS INTELLIGENCE</h2>
-                    <p style={{ maxWidth: '400px', opacity: 0.7, fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>
-                        Clinical Platform V1.0<br />
-                        San Francisco, CA<br />
-                        Verified Provider Access Only
+                    <p style={{ maxWidth: '400px', opacity: 0.7, fontFamily: 'var(--font-mono)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                        Latis is a professional networking platform for doctors and healthcare professionals, built to support meaningful connections in medicine.
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '2rem', justifyContent: 'flex-end', alignItems: 'flex-start' }}>

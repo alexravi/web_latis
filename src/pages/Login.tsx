@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import GridBackground from '../features/landing/GridBackground';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -39,6 +40,7 @@ const Login: React.FC = () => {
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+            <SEO title="Login" description="Secure Provider Portal Login" />
             {/* Background Grid (Subtle) */}
             <div style={{ position: 'absolute', inset: 0, zIndex: -1 }}>
                 <GridBackground />

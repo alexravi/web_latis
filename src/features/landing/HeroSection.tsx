@@ -20,44 +20,48 @@ const HeroSection: React.FC = () => {
                     maxWidth: '1200px',
                     textTransform: 'uppercase',
                 }}>
-                    The Blueprint<br />
-                    <span style={{ color: 'var(--color-accent)' }}>of Medicine</span>.
+                    Your edge is<br />
+                    <span style={{ color: 'var(--color-accent)' }}>your strength</span>.
                 </h1>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '2rem',
-                    marginTop: '4rem',
-                    borderTop: '1px solid var(--color-grid)',
-                    paddingTop: '2rem'
+                <h2 style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 500,
+                    marginBottom: '2rem',
+                    lineHeight: 1.4,
+                    maxWidth: '800px',
+                    color: 'var(--color-fg)'
                 }}>
-                    <div>
-                        <p style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.9rem',
-                            color: 'var(--color-text-muted)',
-                            marginBottom: '0.5rem'
-                        }}>01 — CONCEPT</p>
-                        <p style={{ fontSize: '1.25rem', fontWeight: 500, lineHeight: 1.4 }}>
-                            A high-fidelity network for the medical elite.
-                            Verified intelligence, not social noise.
-                        </p>
-                    </div>
+                    A professional network for medicine — built around expertise, not algorithms.
+                </h2>
 
-                    <div>
-                        <p style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.9rem',
-                            color: 'var(--color-text-muted)',
-                            marginBottom: '0.5rem'
-                        }}>02 — STATUS</p>
-                        <p style={{ fontSize: '1.25rem', fontWeight: 500, lineHeight: 1.4 }}>
-                            Reclaiming professional identity from the general public web.
-                            Your edge is your strength.
-                        </p>
-                    </div>
-                </div>
+                <p style={{
+                    fontSize: '1.1rem',
+                    lineHeight: 1.6,
+                    color: 'var(--color-text-muted)',
+                    maxWidth: '600px',
+                    marginBottom: '3rem'
+                }}>
+                    Latis connects doctors, medical students, and healthcare professionals through what makes them different.
+                    Your specialization, experience, and perspective are not noise — they are nodes in a stronger network.
+                </p>
+
+                <button
+                    type="button"
+                    onClick={() => { /* TODO: Add navigation behavior */ }}
+                    style={{
+                        padding: '16px 32px',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        background: 'var(--color-accent)',
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-mono)'
+                    }}
+                >
+                    FIND YOUR NODES
+                </button>
             </div>
         </section>
     );

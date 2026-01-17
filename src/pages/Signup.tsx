@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import GridBackground from '../features/landing/GridBackground';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 const Signup: React.FC = () => {
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ const Signup: React.FC = () => {
                 localStorage.setItem('user', JSON.stringify(response.data.user));
 
                 toast.success('Account created successfully');
-                navigate('/dashboard');
+                navigate('/complete-profile');
             }
         } catch (error: any) {
             console.error('Signup error:', error);
@@ -43,6 +44,7 @@ const Signup: React.FC = () => {
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+            <SEO title="Signup" description="Apply for Provider Access" />
             <div style={{ position: 'absolute', inset: 0, zIndex: -1 }}>
                 <GridBackground />
             </div>
