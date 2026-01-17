@@ -12,6 +12,9 @@ import SkillModal from './modals/SkillModal';
 import BasicInfoModal from './modals/BasicInfoModal';
 import AboutModal from './modals/AboutModal';
 
+import api from '../../services/api';
+import toast from 'react-hot-toast';
+
 // Icons (Simple SVGs)
 const EditIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -42,6 +45,19 @@ const ProfileView: React.FC = () => {
     // Complex Modal States (Edit vs Add)
     const [experienceModalState, setExperienceModalState] = useState<{ open: boolean; data: Experience | null }>({ open: false, data: null });
     const [educationModalState, setEducationModalState] = useState<{ open: boolean; data: Education | null }>({ open: false, data: null });
+
+    const handleLogout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            toast.success('Logged out successfully');
+            navigate('/login');
+        }
+    };
 
     const fetchData = async () => {
         // Don't set loading true on refresh to avoid flickering entire page
@@ -350,6 +366,29 @@ const ProfileView: React.FC = () => {
                         </div>
 
                     </GlassCard>
+
+                    {/* Settings Card (Private) */}
+                    {isOwnProfile && (
+                        <GlassCard>
+                            <SectionHeader title="Settings" />
+                            <button
+                                onClick={handleLogout}
+                                className="btn-outline"
+                                style={{
+                                    width: '100%',
+                                    borderColor: '#ef4444',
+                                    color: '#ef4444',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                Sign Out
+                            </button>
+                        </GlassCard>
+                    )}
                 </div>
 
 

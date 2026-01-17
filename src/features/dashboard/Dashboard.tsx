@@ -5,11 +5,17 @@ import GridBackground from '../landing/GridBackground';
 import SEO from '../../components/SEO';
 import ProfileCompletionWidget from './components/ProfileCompletionWidget';
 import { getProfile } from '../../services/profileService';
+import type { Post } from '../../types/PostTypes';
+import { getPosts } from '../../services/postService';
+import FeedPost from '../feed/FeedPost';
 
 const Dashboard: React.FC = () => {
     // Real Data State
     const [userProfile, setUserProfile] = React.useState<any>(null);
     const [isLoading, setIsLoading] = React.useState(true);
+
+    // Feed State
+    const [posts, setPosts] = React.useState<Post[]>([]);
 
     React.useEffect(() => {
         const fetchProfile = async () => {
@@ -17,8 +23,12 @@ const Dashboard: React.FC = () => {
                 // converted from dynamic import
                 const data = await getProfile();
                 setUserProfile(data);
+
+                // Fetch Feed
+                const feedData = await getPosts();
+                setPosts(feedData);
             } catch (error) {
-                console.error('Failed to fetch dashboard profile:', error);
+                console.error('Failed to fetch dashboard data:', error);
             } finally {
                 setIsLoading(false);
             }
@@ -34,35 +44,7 @@ const Dashboard: React.FC = () => {
     const displayTitle = userProfile?.user?.current_role || "Medical Professional";
     const displayInstitution = userProfile?.user?.location || "";
 
-    const feed = [
-        {
-            author: "Dr. James Wilson",
-            role: "Cardiothoracic Surgeon",
-            time: "2h ago",
-            content: "Interesting presentation in the OR today. Mitral valve repair with unexpected calcification. Opted for a commisurotomy. Anyone seen similar patterns in post-COVID cohorts?",
-            tags: ["#Cardiology", "#Surgery", "#CaseStudy"],
-            likes: 42,
-            comments: 8
-        },
-        {
-            author: "Elena Rodriguez, PhD",
-            role: "Clinical Researcher",
-            time: "5h ago",
-            content: "Just published our findings on non-invasive biomarkers for early-stage glioblastoma. Link to full paper below. Would love thoughts from the neurosurgery community on clinical applicability.",
-            tags: ["#Oncology", "#Research", "#Biomarkers"],
-            likes: 128,
-            comments: 24
-        },
-        {
-            author: "Dr. Michael Chang",
-            role: "Attending Physician",
-            time: "1d ago",
-            content: "Looking for recommendations for a verified pediatric neurologist in the Seattle area for a consult. Complex presentation involving seizures and motor delay.",
-            tags: ["#Referral", "#Pediatrics", "#Neurology"],
-            likes: 15,
-            comments: 32
-        }
-    ];
+    // Trending Data (Static)
 
     const trending = [
         "New Board Guidelines: Sepsis",
@@ -140,81 +122,71 @@ const Dashboard: React.FC = () => {
                     {/* CENTER COLUMN: FEED (6 cols) */}
                     <div style={{ gridColumn: 'span 6' }} className="grid-col-full-mobile">
                         {/* Post Input */}
+                        {/* Post Input - Premium Status Bar */}
                         <div style={{
                             background: 'var(--color-surface)',
                             border: '1px solid var(--color-grid)',
-                            padding: '24px',
-                            marginBottom: '24px'
+                            padding: '20px',
+                            borderRadius: '16px', // Rounded
+                            marginBottom: '24px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                         }}>
-                            <input type="text" placeholder="Share a case, research, or question..." style={{
-                                width: '100%',
-                                padding: '12px',
-                                background: 'transparent',
-                                border: '1px solid var(--color-grid)',
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: '0.9rem',
-                                color: 'var(--color-fg)',
-                                outline: 'none'
-                            }} />
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', gap: '12px' }}>
-                                <button style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>+ MEDIA</button>
-                                <button style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>+ CASE FILE</button>
+                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                <div style={{
+                                    width: '44px',
+                                    height: '44px',
+                                    borderRadius: '50%',
+                                    background: 'var(--color-grid)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '1.2rem',
+                                    color: 'var(--color-text-muted)'
+                                }}>
+                                    {displayName.charAt(0)}
+                                </div>
+                                <div style={{
+                                    flex: 1,
+                                    background: 'var(--color-bg)',
+                                    borderRadius: '30px',
+                                    padding: '12px 24px',
+                                    border: '1px solid var(--color-grid)',
+                                    cursor: 'text',
+                                    color: 'var(--color-text-muted)',
+                                    fontSize: '0.95rem',
+                                    transition: 'border-color 0.2s',
+                                }}
+                                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--color-accent)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--color-grid)'}
+                                >
+                                    Start a case discussion or share a finding...
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', gap: '8px', paddingLeft: '60px' }}>
+                                <button style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px' }}>
+                                    <span style={{ fontSize: '1.2em' }}>📷</span> Media
+                                </button>
+                                <button style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px' }}>
+                                    <span style={{ fontSize: '1.2em' }}>📁</span> Case File
+                                </button>
                                 <button style={{
                                     background: 'var(--color-fg)',
                                     color: 'var(--color-bg)',
-                                    padding: '8px 16px',
-                                    fontSize: '0.8rem',
-                                    fontFamily: 'var(--font-mono)'
-                                }}>POST</button>
+                                    padding: '8px 24px',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 600,
+                                    borderRadius: '20px',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}>Post</button>
                             </div>
                         </div>
 
                         {/* Feed Stream */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            {feed.map((post, i) => (
-                                <div key={i} style={{
-                                    background: 'var(--color-surface)',
-                                    border: '1px solid var(--color-grid)',
-                                    padding: '24px'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                        <div>
-                                            <h3 style={{ fontSize: '1rem' }}>{post.author}</h3>
-                                            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{post.role}</p>
-                                        </div>
-                                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                                            {post.time}
-                                        </span>
-                                    </div>
-
-                                    <p style={{ fontSize: '1rem', lineHeight: 1.5, marginBottom: '16px' }}>
-                                        {post.content}
-                                    </p>
-
-                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-                                        {post.tags.map(tag => (
-                                            <span key={tag} style={{
-                                                fontSize: '0.75rem',
-                                                color: 'var(--color-accent)',
-                                                fontFamily: 'var(--font-mono)'
-                                            }}>{tag}</span>
-                                        ))}
-                                    </div>
-
-                                    <div style={{
-                                        borderTop: '1px solid var(--color-grid)',
-                                        paddingTop: '16px',
-                                        display: 'flex',
-                                        gap: '24px',
-                                        fontSize: '0.85rem',
-                                        fontFamily: 'var(--font-mono)',
-                                        color: 'var(--color-fg)'
-                                    }}>
-                                        <button>ENDORSE ({post.likes})</button>
-                                        <button>DISCUSS ({post.comments})</button>
-                                        <button>SHARE</button>
-                                    </div>
-                                </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {posts.map((post) => (
+                                <FeedPost key={post.id} post={post} />
                             ))}
                         </div>
                     </div>
