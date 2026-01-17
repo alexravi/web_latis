@@ -1,8 +1,46 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import GridBackground from '../features/landing/GridBackground';
+import api from '../services/api';
+import toast from 'react-hot-toast';
 
 const Signup: React.FC = () => {
+    const navigate = useNavigate();
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSignup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const response = await api.post('/auth/signup', {
+                email,
+                password,
+                first_name: firstName,
+                last_name: lastName
+            });
+
+            if (response.data.success) {
+                localStorage.setItem('token', response.data.token);
+                // Optionally store user info
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+
+                toast.success('Account created successfully');
+                navigate('/dashboard');
+            }
+        } catch (error: any) {
+            console.error('Signup error:', error);
+            const message = error.response?.data?.message || 'Registration failed. Please try again.';
+            toast.error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
             <div style={{ position: 'absolute', inset: 0, zIndex: -1 }}>
@@ -37,37 +75,49 @@ const Signup: React.FC = () => {
                         CREDENTIAL VERIFICATION REQUIRED
                     </p>
 
-                    <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div>
                                 <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                     FIRST NAME
                                 </label>
-                                <input type="text" style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    border: '1px solid var(--color-grid)',
-                                    background: 'var(--color-bg)',
-                                    color: 'var(--color-text-main)',
-                                    borderRadius: '0',
-                                    fontSize: '1rem',
-                                    outline: 'none'
-                                }} />
+                                <input
+                                    type="text"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    required
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        border: '1px solid var(--color-grid)',
+                                        background: 'var(--color-bg)',
+                                        color: 'var(--color-text-main)',
+                                        borderRadius: '0',
+                                        fontSize: '1rem',
+                                        outline: 'none'
+                                    }}
+                                />
                             </div>
                             <div>
                                 <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                     LAST NAME
                                 </label>
-                                <input type="text" style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    border: '1px solid var(--color-grid)',
-                                    background: 'var(--color-bg)',
-                                    color: 'var(--color-text-main)',
-                                    borderRadius: '0',
-                                    fontSize: '1rem',
-                                    outline: 'none'
-                                }} />
+                                <input
+                                    type="text"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    required
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        border: '1px solid var(--color-grid)',
+                                        background: 'var(--color-bg)',
+                                        color: 'var(--color-text-main)',
+                                        borderRadius: '0',
+                                        fontSize: '1rem',
+                                        outline: 'none'
+                                    }}
+                                />
                             </div>
                         </div>
 
@@ -75,48 +125,66 @@ const Signup: React.FC = () => {
                             <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 EMAIL
                             </label>
-                            <input type="email" style={{
-                                width: '100%',
-                                padding: '12px',
-                                border: '1px solid var(--color-grid)',
-                                background: 'var(--color-bg)',
-                                color: 'var(--color-text-main)',
-                                borderRadius: '0',
-                                fontSize: '1rem',
-                                outline: 'none',
-                                fontFamily: 'var(--font-mono)'
-                            }} placeholder="doctor@hospital.org" />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    border: '1px solid var(--color-grid)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text-main)',
+                                    borderRadius: '0',
+                                    fontSize: '1rem',
+                                    outline: 'none',
+                                    fontFamily: 'var(--font-mono)'
+                                }}
+                                placeholder="doctor@hospital.org"
+                            />
                         </div>
 
                         <div>
                             <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
                                 CREATE PASSWORD
                             </label>
-                            <input type="password" style={{
-                                width: '100%',
-                                padding: '12px',
-                                border: '1px solid var(--color-grid)',
-                                background: 'var(--color-bg)',
-                                color: 'var(--color-text-main)',
-                                borderRadius: '0',
-                                fontSize: '1rem',
-                                outline: 'none'
-                            }} />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    border: '1px solid var(--color-grid)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text-main)',
+                                    borderRadius: '0',
+                                    fontSize: '1rem',
+                                    outline: 'none'
+                                }}
+                            />
                         </div>
 
-                        <button type="button" style={{
-                            marginTop: '1rem',
-                            padding: '16px',
-                            background: 'var(--color-accent)',
-                            color: 'white',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            letterSpacing: '0.05em',
-                            border: '1px solid var(--color-accent)',
-                            cursor: 'pointer',
-                            textAlign: 'center'
-                        }}>
-                            SUBMIT APPLICATION
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{
+                                marginTop: '1rem',
+                                padding: '16px',
+                                background: loading ? 'var(--color-text-muted)' : 'var(--color-accent)',
+                                color: 'white',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                letterSpacing: '0.05em',
+                                border: 'none',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                textAlign: 'center',
+                                opacity: loading ? 0.7 : 1
+                            }}
+                        >
+                            {loading ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
                         </button>
 
                         <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem' }}>

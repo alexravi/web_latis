@@ -1,9 +1,26 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 const AppHeader: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            toast.success('Logged out successfully');
+            navigate('/login');
+        }
+    };
+
     // Mock Nav Items
     const navItems = [
         // ... (rest of file)
@@ -107,6 +124,18 @@ const AppHeader: React.FC = () => {
                 }}>
                     SC
                 </div>
+
+                <button onClick={handleLogout} style={{
+                    background: 'transparent',
+                    border: '1px solid var(--color-grid)',
+                    padding: '4px 8px',
+                    fontSize: '0.7rem',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    fontFamily: 'var(--font-mono)'
+                }}>
+                    LOGOUT
+                </button>
 
                 {/* Theme Toggle */}
                 <button onClick={toggleTheme} style={{
