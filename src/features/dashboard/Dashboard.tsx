@@ -1,18 +1,38 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import AppHeader from './AppHeader';
 import GridBackground from '../landing/GridBackground';
 import SEO from '../../components/SEO';
 import ProfileCompletionWidget from './components/ProfileCompletionWidget';
+import { getProfile } from '../../services/profileService';
 
 const Dashboard: React.FC = () => {
-    // Mock Data for "People-First" Medical Network
-    const user = {
-        name: "Dr. Sarah Chen, MD",
-        title: "Neuro-Oncology Fellow",
-        institution: "UCSF Medical Center",
-        connections: 843,
-        views: "1.2k"
-    };
+    // Real Data State
+    const [userProfile, setUserProfile] = React.useState<any>(null);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                // converted from dynamic import
+                const data = await getProfile();
+                setUserProfile(data);
+            } catch (error) {
+                console.error('Failed to fetch dashboard profile:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProfile();
+    }, []);
+
+    // Fallback/Default values if data is missing
+    const displayName = userProfile?.user?.first_name
+        ? `${userProfile.user.first_name} ${userProfile.user.last_name}`
+        : "User";
+
+    const displayTitle = userProfile?.user?.current_role || "Medical Professional";
+    const displayInstitution = userProfile?.user?.location || "";
 
     const feed = [
         {
@@ -70,40 +90,50 @@ const Dashboard: React.FC = () => {
                 }}>
                     {/* LEFT COLUMN: IDENTITY (3 cols) */}
                     <div style={{ gridColumn: 'span 3' }} className="hide-on-mobile">
-                        <div style={{
-                            background: 'var(--color-surface)',
-                            border: '1px solid var(--color-grid)',
-                            padding: '24px'
-                        }}>
+                        {isLoading ? (
+                            <div style={{ padding: '24px', background: 'var(--color-surface)', border: '1px solid var(--color-grid)', color: 'var(--color-text-muted)' }}>
+                                Loading profile...
+                            </div>
+                        ) : (
                             <div style={{
-                                width: '80px',
-                                height: '80px',
-                                background: 'var(--color-grid)',
-                                marginBottom: '16px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontFamily: 'var(--font-mono)',
-                                color: 'var(--color-text-muted)'
+                                background: 'var(--color-surface)',
+                                border: '1px solid var(--color-grid)',
+                                padding: '24px'
                             }}>
-                                [IMG]
-                            </div>
-                            <h2 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{user.name}</h2>
-                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>
-                                {user.title}<br />{user.institution}
-                            </p>
+                                <Link to="/profile" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    <div style={{
+                                        width: '80px',
+                                        height: '80px',
+                                        background: 'var(--color-grid)',
+                                        marginBottom: '16px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontFamily: 'var(--font-mono)',
+                                        color: 'var(--color-text-muted)',
+                                        fontSize: '1.5rem',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {displayName.charAt(0)}
+                                    </div>
+                                    <h2 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{displayName}</h2>
+                                </Link>
+                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                                    {displayTitle}<br />{displayInstitution}
+                                </p>
 
-                            <div style={{ borderTop: '1px solid var(--color-grid)', paddingTop: '16px', fontSize: '0.85rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ color: 'var(--color-text-muted)' }}>Connections</span>
-                                    <span style={{ fontFamily: 'var(--font-mono)' }}>{user.connections}</span>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span style={{ color: 'var(--color-text-muted)' }}>Profile Views</span>
-                                    <span style={{ fontFamily: 'var(--font-mono)' }}>{user.views}</span>
+                                <div style={{ borderTop: '1px solid var(--color-grid)', paddingTop: '16px', fontSize: '0.85rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ color: 'var(--color-text-muted)' }}>Connections</span>
+                                        <span style={{ fontFamily: 'var(--font-mono)' }}>0</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: 'var(--color-text-muted)' }}>Profile Views</span>
+                                        <span style={{ fontFamily: 'var(--font-mono)' }}>0</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                         <ProfileCompletionWidget />
                     </div>
 
