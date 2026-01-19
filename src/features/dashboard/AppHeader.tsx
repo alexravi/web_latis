@@ -1,12 +1,28 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 import { getProfile } from '../../services/profileService';
 
 import ConsultDrawer from '../messaging/ConsultDrawer';
 
 const AppHeader: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            toast.success('Logged out successfully');
+            navigate('/login');
+        }
+    };
 
 
     const [userProfile, setUserProfile] = React.useState<any>(null);
@@ -39,6 +55,15 @@ const AppHeader: React.FC = () => {
 
     ];
 
+
+    const [searchQuery, setSearchQuery] = React.useState('');
+
+    const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+        }
+    };
+
     return (
         <>
             <header style={{
@@ -69,16 +94,23 @@ const AppHeader: React.FC = () => {
                     </Link>
 
                     <div className="hide-on-mobile" style={{ position: 'relative' }}>
-                        <input type="text" placeholder="Search directory, drugs, or conditions..." style={{
-                            background: 'var(--color-accent-subtle)',
-                            border: 'none',
-                            padding: '8px 16px',
-                            width: '300px',
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.8rem',
-                            color: 'var(--color-fg)',
-                            outline: 'none'
-                        }} />
+                        <input
+                            type="text"
+                            placeholder="Search directory, drugs, or conditions..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleSearch}
+                            style={{
+                                background: 'var(--color-accent-subtle)',
+                                border: 'none',
+                                padding: '8px 16px',
+                                width: '300px',
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.8rem',
+                                color: 'var(--color-fg)',
+                                outline: 'none'
+                            }}
+                        />
                         <span style={{
                             position: 'absolute',
                             right: '12px',
@@ -170,8 +202,22 @@ const AppHeader: React.FC = () => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '0.9rem'
-                    }}>
+                    }} title="Toggle Theme">
                         {theme === 'light' ? '☾' : '☀'}
+                    </button>
+
+                    {/* Logout Button */}
+                    <button onClick={handleLogout} style={{
+                        width: '32px',
+                        height: '32px',
+                        border: '1px solid var(--color-grid)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--color-text-muted)',
+                        cursor: 'pointer'
+                    }} title="Sign Out">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </button>
                 </div>
             </header>

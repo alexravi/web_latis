@@ -3,6 +3,8 @@ import api from './api';
 // --- Types ---
 
 export interface UserProfile {
+    first_name?: string;
+    last_name?: string;
     headline?: string;
     summary?: string;
     location?: string;
@@ -15,6 +17,7 @@ export interface UserProfile {
     medical_school_graduation_year?: number;
     residency_completion_year?: number;
     fellowship_completion_year?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any; // Allow flexibility
 }
 
@@ -23,14 +26,17 @@ export interface ExtendedProfile {
     languages?: string[];
     interests?: string[];
     causes?: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     volunteer_experiences?: any; // strict typing can be added later if needed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
 export interface Experience {
     title: string;
-    position_type: string;
+    position_type: string; // Required
     institution_name: string;
+    organization_id?: number;
     department?: string;
     specialty?: string;
     subspecialty?: string;
@@ -42,12 +48,14 @@ export interface Experience {
     description?: string;
     patient_care_responsibilities?: string;
     research_focus_areas?: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
 export interface Education {
     degree_type: string;
     institution_name: string;
+    organization_id?: number;
     field_of_study?: string;
     institution_type?: string;
     location?: string;
@@ -62,6 +70,7 @@ export interface Education {
     recognition?: string;
     description?: string;
     is_current?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -80,6 +89,7 @@ export interface Certification {
     status?: string;
     verification_url?: string;
     description?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -87,33 +97,57 @@ export interface Publication {
     publication_type: string;
     title: string;
     authors: string[];
+    author_order?: number;
     journal_name?: string;
+    publisher?: string;
     publication_date?: string;
+    doi?: string;
     url?: string;
+    abstract?: string;
+    keywords?: string[];
+    impact_factor?: number;
+    citation_count?: number;
+    is_peer_reviewed?: boolean;
+    volume?: string;
+    issue?: string;
+    pages?: string;
     description?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
 export interface Project {
     title: string;
     project_type: string;
+    organization_id?: number;
     description?: string;
     start_date?: string;
     end_date?: string;
     is_current?: boolean;
     role?: string;
+    responsibilities?: string;
+    outcomes?: string;
+    technologies_used?: string[];
+    collaborators?: string[];
+    funding_source?: string;
+    grant_number?: string;
     url?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
 export interface Award {
     title: string;
     award_type: string;
+    organization_id?: number;
     issuing_organization?: string;
     description?: string;
     date_received?: string;
     year?: number;
+    monetary_value?: number;
+    currency?: string;
     url?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 

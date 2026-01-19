@@ -1,89 +1,74 @@
-import type { Post, Comment, User } from '../types/PostTypes';
+import api from './api';
+import type { Post, PaginatedResponse, SingleResponse, PostType, Visibility } from '../types/PostTypes';
 
-// Mock Data
-const MOCK_USER: User = {
-    id: 'u1',
-    name: 'Dr. Alex Ravi',
-    role: 'Chief Resident',
-    avatar: undefined
-};
+// --- Feed & Posts ---
 
-const MOCK_COMMENTS: Comment[] = [
-    {
-        id: 'c1',
-        author: { id: 'u2', name: 'Dr. Sarah Chen', role: 'Neurologist' },
-        content: 'This is a really interesting case. Have you considered differential diagnosis X?',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-        likes: 12,
-        replies: [
-            {
-                id: 'c1-r1',
-                author: { id: 'u1', name: 'Dr. James Wilson', role: 'Cardiologist' },
-                content: 'Yes, we ruled that out due to the lack of symptom Y. Good thought though!',
-                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
-                likes: 5,
-                replies: []
-            }
-        ]
-    },
-    {
-        id: 'c2',
-        author: { id: 'u3', name: 'Dr. Emily Blunt', role: 'General Surgeon' },
-        content: 'I have seen similar presentation in post-op patients.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-        likes: 8,
-        replies: []
-    }
-];
-
-const MOCK_POSTS: Post[] = [
-    {
-        id: 'p1',
-        author: { id: 'u10', name: 'Dr. James Wilson', role: 'Cardiothoracic Surgeon' },
-        content: "Interesting presentation in the OR today. Mitral valve repair with unexpected calcification. Opted for a commisurotomy. Anyone seen similar patterns in post-COVID cohorts?",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        tags: ["#Cardiology", "#Surgery", "#CaseStudy"],
-        likes: 42,
-        commentsCount: 8,
-        comments: MOCK_COMMENTS
-    },
-    {
-        id: 'p2',
-        author: { id: 'u11', name: 'Elena Rodriguez, PhD', role: 'Clinical Researcher' },
-        content: "Just published our findings on non-invasive biomarkers for early-stage glioblastoma. Link to full paper below. Would love thoughts from the neurosurgery community on clinical applicability.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-        tags: ["#Oncology", "#Research", "#Biomarkers"],
-        likes: 128,
-        commentsCount: 24,
-        comments: []
-    }
-];
-
-export const getPosts = async (): Promise<Post[]> => {
-    // Simulate API delay
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(MOCK_POSTS), 500);
+export const getFeed = async (sort = 'new', limit = 20, offset = 0): Promise<PaginatedResponse<Post>> => {
+    const response = await api.get<PaginatedResponse<Post>>('/posts', {
+        params: { sort, limit, offset }
     });
+    return response.data;
 };
 
-export const getPostById = async (id: string): Promise<Post | undefined> => {
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(MOCK_POSTS.find(p => p.id === id)), 300);
-    });
+export const getPostById = async (id: number): Promise<Post> => {
+    const response = await api.get<SingleResponse<Post>>(`/posts/${id}`);
+    return response.data.data;
 };
 
-export const addComment = async (_postId: string, content: string, _parentCommentId?: string): Promise<Comment> => {
-    // In a real app, this would POST to backend.
-    // Here we just return a new mock object.
-    const newComment: Comment = {
-        id: `c-${Date.now()}`,
-        author: MOCK_USER, // Acting as current user
+export const createPost = async (content: string, postType: PostType = 'post', visibility: Visibility = 'public'): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>('/posts', {
         content,
-        timestamp: new Date().toISOString(),
-        likes: 0,
-        replies: []
-    };
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(newComment), 300);
+        post_type: postType,
+        visibility
     });
+    return response.data.data;
+};
+
+export const updatePost = async (id: number, data: { content?: string; post_type?: PostType; visibility?: Visibility; is_pinned?: boolean }): Promise<Post> => {
+    const response = await api.put<SingleResponse<Post>>(`/posts/${id}`, data);
+    return response.data.data;
+};
+
+export const deletePost = async (id: number): Promise<void> => {
+    await api.delete(`/posts/${id}`);
+};
+
+// --- Voting ---
+
+export const upvotePost = async (id: number): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>(`/posts/${id}/upvote`);
+    return response.data.data;
+};
+
+export const downvotePost = async (id: number): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>(`/posts/${id}/downvote`);
+    return response.data.data;
+};
+
+export const removePostVote = async (id: number): Promise<Post> => {
+    const response = await api.delete<SingleResponse<Post>>(`/posts/${id}/vote`);
+    return response.data.data;
+};
+
+// --- Reposts ---
+
+export const repostPost = async (id: number): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>(`/posts/${id}/repost`);
+    return response.data.data;
+};
+
+export const unrepostPost = async (id: number): Promise<void> => {
+    await api.delete(`/posts/${id}/repost`);
+};
+
+export const getReposts = async (id: number, limit = 50, offset = 0): Promise<PaginatedResponse<Post>> => {
+    const response = await api.get<PaginatedResponse<Post>>(`/posts/${id}/reposts`, {
+        params: { limit, offset }
+    });
+    return response.data;
+};
+
+export const checkReposted = async (id: number): Promise<{ has_reposted: boolean; repost_id?: number }> => {
+    const response = await api.get<SingleResponse<{ has_reposted: boolean; repost_id?: number }>>(`/posts/${id}/reposted`);
+    return response.data.data;
 };

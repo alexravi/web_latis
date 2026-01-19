@@ -1,9 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AppHeader from '../dashboard/AppHeader';
 import GridBackground from '../landing/GridBackground';
 import SEO from '../../components/SEO';
 
 const NodesPage: React.FC = () => {
+    const [searchParams] = useSearchParams();
+    const initialQuery = searchParams.get('search') || '';
+    const [filterQuery, setFilterQuery] = useState(initialQuery);
+
+    // Update filter if URL changes
+    useEffect(() => {
+        const q = searchParams.get('search');
+        if (q !== null) {
+            setFilterQuery(q);
+        }
+    }, [searchParams]);
+
     // Mock Data
     const incomingConsults = [
         { id: 1, name: "Dr. Sarah Chen", role: "Neurologist", institution: "General Hospital", mutual: 4 },
@@ -16,11 +29,16 @@ const NodesPage: React.FC = () => {
         { id: 5, name: "Dr. Linda K.", role: "Dermatologist", institution: "Private Practice", reason: "Trending in your area" },
     ];
 
-    const myNodes = [
+    const allNodes = [
         { id: 101, name: "Dr. Alan Grant", role: "Paleontologist", institution: "Independent", status: "Online" },
         { id: 102, name: "Dr. Ellie Sattler", role: "Paleobotanist", institution: "Research Inst", status: "Away" },
         { id: 103, name: "Dr. Ian Malcolm", role: "Mathematician", institution: "Chaos Theory Dept", status: "Offline" },
     ];
+
+    const myNodes = allNodes.filter(node =>
+        node.name.toLowerCase().includes(filterQuery.toLowerCase()) ||
+        node.role.toLowerCase().includes(filterQuery.toLowerCase())
+    );
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -192,15 +210,20 @@ const NodesPage: React.FC = () => {
                                 </div>
 
                                 <div style={{ position: 'relative', marginBottom: '16px', flexShrink: 0 }}>
-                                    <input type="text" placeholder="Filter edges..." style={{
-                                        width: '100%',
-                                        padding: '8px 12px',
-                                        borderRadius: '8px',
-                                        border: '1px solid var(--color-grid)',
-                                        background: 'var(--color-bg)',
-                                        color: 'var(--color-fg)',
-                                        fontSize: '0.85rem'
-                                    }} />
+                                    <input
+                                        type="text"
+                                        placeholder="Filter edges..."
+                                        value={filterQuery}
+                                        onChange={(e) => setFilterQuery(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px 12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid var(--color-grid)',
+                                            background: 'var(--color-bg)',
+                                            color: 'var(--color-fg)',
+                                            fontSize: '0.85rem'
+                                        }} />
                                     <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '10px' }}>🔍</span>
                                 </div>
 

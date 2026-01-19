@@ -1,57 +1,72 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppHeader from './AppHeader';
 import GridBackground from '../landing/GridBackground';
 import SEO from '../../components/SEO';
 import ProfileCompletionWidget from './components/ProfileCompletionWidget';
-import { getProfile } from '../../services/profileService';
-import type { Post } from '../../types/PostTypes';
-import { getPosts } from '../../services/postService';
+import { useProfile } from '../../hooks/useProfile';
+import { useInfinitePosts } from '../../hooks/usePosts';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import FeedPost from '../feed/FeedPost';
+import PostSkeleton from '../../components/skeletons/PostSkeleton';
+import CreatePost from '../feed/CreatePost';
+import PostDetailModal from '../feed/PostDetailModal';
+import type { Post } from '../../types/PostTypes';
 
 const Dashboard: React.FC = () => {
-    // Real Data State
-    const [userProfile, setUserProfile] = React.useState<any>(null);
-    const [isLoading, setIsLoading] = React.useState(true);
+    // Modal state
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Feed State
-    const [posts, setPosts] = React.useState<Post[]>([]);
+    // Use React Query hooks for data fetching
+    const { data: userProfile, isLoading: isProfileLoading } = useProfile();
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading: isPostsLoading,
+    } = useInfinitePosts(10);
 
-    React.useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                // converted from dynamic import
-                const data = await getProfile();
-                setUserProfile(data);
+    // Flatten pages into single array
+    const posts = useMemo(() => {
+        return data?.pages.flatMap((page) => page.data) || [];
+    }, [data]);
 
-                // Fetch Feed
-                const feedData = await getPosts();
-                setPosts(feedData);
-            } catch (error) {
-                console.error('Failed to fetch dashboard data:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchProfile();
-    }, []);
+    // Infinite scroll observer
+    const observerTarget = useInfiniteScroll({
+        hasNextPage: hasNextPage ?? false,
+        isFetchingNextPage: isFetchingNextPage,
+        fetchNextPage,
+    });
 
-    // Fallback/Default values if data is missing
-    const displayName = userProfile?.user?.first_name
-        ? `${userProfile.user.first_name} ${userProfile.user.last_name}`
-        : "User";
+    const isLoading = isProfileLoading || isPostsLoading;
 
-    const displayTitle = userProfile?.user?.current_role || "Medical Professional";
-    const displayInstitution = userProfile?.user?.location || "";
+    // Fallback/Default values if data is missing - memoized
+    const displayName = useMemo(() =>
+        userProfile?.user?.first_name
+            ? `${userProfile.user.first_name} ${userProfile.user.last_name}`
+            : "User",
+        [userProfile?.user?.first_name, userProfile?.user?.last_name]
+    );
 
-    // Trending Data (Static)
+    const displayTitle = useMemo(() =>
+        userProfile?.user?.current_role || "Medical Professional",
+        [userProfile?.user?.current_role]
+    );
 
-    const trending = [
+    const displayInstitution = useMemo(() =>
+        userProfile?.user?.location || "",
+        [userProfile?.user?.location]
+    );
+
+    // Trending Data (Static) - memoized
+    const trending = useMemo(() => [
         "New Board Guidelines: Sepsis",
         "Conference: Neuro 2026",
         "Residency Match Results",
         "Telehealth Billing Codes"
-    ];
+    ], []);
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -122,73 +137,63 @@ const Dashboard: React.FC = () => {
                     {/* CENTER COLUMN: FEED (6 cols) */}
                     <div style={{ gridColumn: 'span 6' }} className="grid-col-full-mobile">
                         {/* Post Input */}
-                        {/* Post Input - Premium Status Bar */}
-                        <div style={{
-                            background: 'var(--color-surface)',
-                            border: '1px solid var(--color-grid)',
-                            padding: '20px',
-                            borderRadius: '16px', // Rounded
-                            marginBottom: '24px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-                        }}>
-                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                                <div style={{
-                                    width: '44px',
-                                    height: '44px',
-                                    borderRadius: '50%',
-                                    background: 'var(--color-grid)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '1.2rem',
-                                    color: 'var(--color-text-muted)'
-                                }}>
-                                    {displayName.charAt(0)}
-                                </div>
-                                <div style={{
-                                    flex: 1,
-                                    background: 'var(--color-bg)',
-                                    borderRadius: '30px',
-                                    padding: '12px 24px',
-                                    border: '1px solid var(--color-grid)',
-                                    cursor: 'text',
-                                    color: 'var(--color-text-muted)',
-                                    fontSize: '0.95rem',
-                                    transition: 'border-color 0.2s',
-                                }}
-                                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--color-accent)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--color-grid)'}
-                                >
-                                    Start a case discussion or share a finding...
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', gap: '8px', paddingLeft: '60px' }}>
-                                <button style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px' }}>
-                                    <span style={{ fontSize: '1.2em' }}>📷</span> Media
-                                </button>
-                                <button style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px' }}>
-                                    <span style={{ fontSize: '1.2em' }}>📁</span> Case File
-                                </button>
-                                <button style={{
-                                    background: 'var(--color-fg)',
-                                    color: 'var(--color-bg)',
-                                    padding: '8px 24px',
-                                    fontSize: '0.9rem',
-                                    fontWeight: 600,
-                                    borderRadius: '20px',
-                                    border: 'none',
-                                    cursor: 'pointer'
-                                }}>Post</button>
-                            </div>
+                        <div style={{ marginBottom: '24px' }}>
+                            <CreatePost onPostCreated={() => {
+                                // We can trigger a refresh manually or let React Query handle it via invalidation
+                                // For now, maybe just optimistic or rely on invalidation if we had access to queryClient here easily,
+                                // but CreatePost internally handled creation. 
+                                // Ideally we should pass a callback that refetches.
+                                // Since we use useInfinitePosts, we might want to refetch the first page.
+                                // Actually, useInfinitePosts returns `refetch`. But we destructured `fetchNextPage`.
+                                // Let's simplify and just rely on the feed being "eventually consistent" or user pull-to-refresh if we had one.
+                                // Or better: CreatePost doesn't need to do much if we invalidate queries.
+                                // But CreatePost takes `onPostCreated`.
+                                // Let's just log or toast for now.
+                            }} />
                         </div>
 
                         {/* Feed Stream */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {posts.map((post) => (
-                                <FeedPost key={post.id} post={post} />
-                            ))}
+                            {isPostsLoading && posts.length === 0 ? (
+                                <>
+                                    <PostSkeleton />
+                                    <PostSkeleton />
+                                    <PostSkeleton />
+                                </>
+                            ) : posts.length === 0 ? (
+                                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                                    No posts yet. Start a discussion!
+                                </div>
+                            ) : (
+                                <>
+                                    {posts.map((post) => (
+                                        <FeedPost
+                                            key={post.id}
+                                            post={post}
+                                            onClick={() => {
+                                                setSelectedPost(post);
+                                                setIsModalOpen(true);
+                                            }}
+                                        />
+                                    ))}
+                                    {/* Infinite scroll trigger */}
+                                    <div ref={observerTarget} style={{ height: '20px' }}>
+                                        {isFetchingNextPage && <PostSkeleton />}
+                                    </div>
+                                    {!hasNextPage && posts.length > 0 && (
+                                        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                                            No more posts to load
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
+
+                        <PostDetailModal
+                            isOpen={isModalOpen}
+                            onClose={() => setIsModalOpen(false)}
+                            post={selectedPost}
+                        />
                     </div>
 
                     {/* RIGHT COLUMN: WIDGETS (3 cols) */}

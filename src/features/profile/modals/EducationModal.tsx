@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ActionModal from './ActionModal';
 import { type Education, addEducation, updateEducation } from '../../../services/profileService';
+import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import toast from 'react-hot-toast';
 
 interface EducationModalProps {
@@ -22,6 +23,7 @@ const EducationModal: React.FC<EducationModalProps> = ({
         field_of_study: '',
         start_date: '',
         graduation_date: '',
+        location: '',
         grade: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +42,7 @@ const EducationModal: React.FC<EducationModalProps> = ({
                 field_of_study: '',
                 start_date: '',
                 graduation_date: '',
+                location: '',
                 grade: ''
             });
         }
@@ -81,6 +84,14 @@ const EducationModal: React.FC<EducationModalProps> = ({
                 onChange={e => setFormData({ ...formData, institution_name: e.target.value })}
                 required
                 placeholder="Ex: Harvard University"
+            />
+
+            <label className="modal-label">LOCATION</label>
+            <LocationAutocomplete
+                className="modal-input"
+                value={formData.location || ''}
+                onChange={(val) => setFormData({ ...formData, location: val })}
+                placeholder="Ex: Boston, MA"
             />
 
             <label className="modal-label">DEGREE</label>

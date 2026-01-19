@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ActionModal from './ActionModal';
 import { type UserProfile, updateBasicInfo } from '../../../services/profileService';
+import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import toast from 'react-hot-toast';
 
 interface BasicInfoModalProps {
@@ -101,10 +102,10 @@ const BasicInfoModal: React.FC<BasicInfoModalProps> = ({
             />
 
             <label className="modal-label">LOCATION</label>
-            <input
+            <LocationAutocomplete
                 className="modal-input"
-                value={formData.location}
-                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                value={formData.location || ''}
+                onChange={(val) => setFormData({ ...formData, location: val })}
                 placeholder="Ex: New York, NY"
             />
         </ActionModal>

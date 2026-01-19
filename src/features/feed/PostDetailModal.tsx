@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import type { Post, Comment } from '../../types/PostTypes';
-import { addComment } from '../../services/postService';
+import React, { useState, useEffect, useCallback } from 'react';
+import type { Post, Comment, PaginatedResponse } from '../../types/PostTypes';
+import { createComment, getPostComments } from '../../services/commentService';
 import CommentTree from './components/CommentTree';
 
 interface PostDetailModalProps {
@@ -10,67 +10,79 @@ interface PostDetailModalProps {
 }
 
 const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post }) => {
-    const [localPost, setLocalPost] = useState<Post | null>(null);
+    const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [sort, setSort] = useState('best');
+    const [isLoadingComments, setIsLoadingComments] = useState(false);
 
+    // Fetch comments when modal opens or post/sort changes
     useEffect(() => {
-        setLocalPost(post);
-    }, [post]);
+        if (isOpen && post) {
+            fetchComments();
+        } else {
+            setComments([]);
+        }
+    }, [isOpen, post, sort]);
 
-    if (!isOpen || !localPost) return null;
+    const fetchComments = async () => {
+        if (!post) return;
+        setIsLoadingComments(true);
+        try {
+            // We use tree=true to get the nested structure directly from backend
+            const result = await getPostComments(post.id, sort, true, 50, 0);
+            // Type guard to handle if it returns array or paginated response
+            const commentsData = Array.isArray(result) ? result : (result as PaginatedResponse<Comment>).data;
+            setComments(commentsData);
+        } catch (error) {
+            console.error("Failed to load comments", error);
+        } finally {
+            setIsLoadingComments(false);
+        }
+    };
 
     const handleAddTopLevelComment = async () => {
-        if (!newComment.trim()) return;
+        if (!newComment.trim() || !post) return;
 
-        // Optimistic Update
-        const tempId = `temp-${Date.now()}`;
-        const tempComment: Comment = {
-            id: tempId,
-            author: { id: 'me', name: 'Me', role: 'Medical Professional' }, // Mock current user
-            content: newComment,
-            timestamp: new Date().toISOString(),
-            likes: 0,
-            replies: []
-        };
-
-        const updatedComments = [tempComment, ...localPost.comments];
-        setLocalPost({ ...localPost, comments: updatedComments });
-        setNewComment('');
-
-        // API Call (Mock)
-        await addComment(localPost.id, newComment);
-        // ideally we replace tempComment with real one, but for mock this is fine.
+        try {
+            const addedComment = await createComment(post.id, newComment);
+            setComments(prev => [addedComment, ...prev]);
+            setNewComment('');
+        } catch (error) {
+            console.error("Failed to post comment", error);
+        }
     };
 
-    const handleReply = async (parentId: string, content: string) => {
-        // Helper to recursively find and add reply
-        const addReplyToTree = (comments: Comment[]): Comment[] => {
-            return comments.map(c => {
-                if (c.id === parentId) {
-                    const newReply: Comment = {
-                        id: `r-${Date.now()}`,
-                        author: { id: 'me', name: 'Me', role: 'Medical Professional' },
-                        content: content,
-                        timestamp: new Date().toISOString(),
-                        likes: 0,
-                        replies: []
-                    };
-                    return { ...c, replies: [...c.replies, newReply] };
-                } else if (c.replies.length > 0) {
-                    return { ...c, replies: addReplyToTree(c.replies) };
-                }
-                return c;
-            });
-        };
+    const handleReply = useCallback(async (parentId: number, content: string) => {
+        if (!post) return;
+        try {
+            const addedReply = await createComment(post.id, content, parentId);
 
-        setLocalPost({
-            ...localPost,
-            comments: addReplyToTree(localPost.comments)
-        });
+            // Recursive helper to insert the new reply into the tree
+            const insertReply = (list: Comment[]): Comment[] => {
+                return list.map(c => {
+                    if (c.id === parentId) {
+                        return {
+                            ...c,
+                            replies: c.replies ? [...c.replies, addedReply] : [addedReply],
+                            replies_count: (c.replies_count || 0) + 1
+                        };
+                    } else if (c.replies && c.replies.length > 0) {
+                        return {
+                            ...c,
+                            replies: insertReply(c.replies)
+                        };
+                    }
+                    return c;
+                });
+            };
 
-        // Backend call (Fire and forget for mock)
-        await addComment(localPost.id, content, parentId);
-    };
+            setComments(prev => insertReply(prev));
+        } catch (error) {
+            console.error("Failed to post reply", error);
+        }
+    }, [post]);
+
+    if (!isOpen || !post) return null;
 
     return (
         <div style={{
@@ -158,25 +170,29 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                         {/* Original Post Content */}
                         <div style={{ marginBottom: '40px', padding: '0 32px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                                <div style={{
-                                    width: '48px',
-                                    height: '48px',
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #4da6ff, #0066cc)', // Premium Gradient
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: '700',
-                                    color: 'white',
-                                    fontSize: '1.1rem',
-                                    boxShadow: '0 4px 12px rgba(0,102,204,0.3)'
-                                }}>
-                                    {localPost.author.name[0]}
-                                </div>
+                                {post.profile_image_url ? (
+                                    <img src={post.profile_image_url} alt={post.first_name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }} />
+                                ) : (
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #4da6ff, #0066cc)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: '700',
+                                        color: 'white',
+                                        fontSize: '1.1rem',
+                                        boxShadow: '0 4px 12px rgba(0,102,204,0.3)'
+                                    }}>
+                                        {post.first_name[0]}
+                                    </div>
+                                )}
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--color-fg)' }}>{localPost.author.name}</div>
+                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--color-fg)' }}>{post.first_name} {post.last_name}</div>
                                     <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                                        {localPost.author.role} • <span style={{ opacity: 0.8 }}>{new Date(localPost.timestamp).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</span>
+                                        {post.headline || 'Member'} • <span style={{ opacity: 0.8 }}>{new Date(post.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</span>
                                     </div>
                                 </div>
                             </div>
@@ -186,26 +202,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                                 lineHeight: 1.7,
                                 marginBottom: '24px',
                                 color: 'rgba(255,255,255,0.9)',
-                                fontWeight: 400
+                                fontWeight: 400,
+                                whiteSpace: 'pre-wrap'
                             }}>
-                                {localPost.content}
+                                {post.content}
                             </p>
-
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
-                                {localPost.tags.map(tag => (
-                                    <span key={tag} style={{
-                                        background: 'rgba(var(--color-accent-rgb), 0.12)',
-                                        color: 'var(--color-accent)',
-                                        padding: '6px 12px',
-                                        borderRadius: '20px',
-                                        fontSize: '0.85rem',
-                                        fontWeight: 500,
-                                        border: '1px solid rgba(var(--color-accent-rgb), 0.1)'
-                                    }}>
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
 
                             <div style={{
                                 borderTop: '1px solid rgba(255,255,255,0.08)',
@@ -218,10 +219,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                                 fontWeight: 500
                             }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{localPost.likes}</span> Endorsements
+                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.upvotes_count}</span> Upvotes
                                 </span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{localPost.commentsCount}</span> Comments
+                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.comments_count}</span> Comments
                                 </span>
                             </div>
                         </div>
@@ -291,19 +292,46 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
 
                         {/* Thread Filter */}
                         <div style={{ padding: '0 32px', marginBottom: '8px', display: 'flex', justifyContent: 'flex-end' }}>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                Sort by <span style={{ color: 'var(--color-fg)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>Top <span style={{ fontSize: '0.7em' }}>▼</span></span>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                Sort by:
+                                <select
+                                    value={sort}
+                                    onChange={(e) => setSort(e.target.value)}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'var(--color-fg)',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                        outline: 'none'
+                                    }}
+                                >
+                                    <option value="best">Best</option>
+                                    <option value="top">Top</option>
+                                    <option value="new">Newest</option>
+                                </select>
                             </div>
                         </div>
 
                         {/* Nested Comments */}
                         <div style={{ padding: '0 32px' }}>
-                            <CommentTree comments={localPost.comments} onAddReply={handleReply} />
+                            {isLoadingComments ? (
+                                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading discussions...</div>
+                            ) : (
+                                <CommentTree comments={comments} onAddReply={handleReply} />
+                            )}
                         </div>
                     </div>
 
                 </div>
             </div>
+            <style>{`
+                @keyframes modalSlideUp {
+                    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                }
+            `}</style>
         </div>
     );
 };

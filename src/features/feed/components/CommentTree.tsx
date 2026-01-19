@@ -4,7 +4,7 @@ import CommentNode from './CommentNode';
 
 interface CommentTreeProps {
     comments: Comment[];
-    onAddReply: (parentId: string, content: string) => void;
+    onAddReply: (parentId: number, content: string) => void;
 }
 
 const CommentTree: React.FC<CommentTreeProps> = ({ comments, onAddReply }) => {
