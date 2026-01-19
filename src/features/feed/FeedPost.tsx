@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import type { Post, Comment } from '../../types/PostTypes';
 import { addComment } from '../../services/postService';
 import CommentTree from './components/CommentTree';
@@ -16,7 +16,7 @@ const FeedPost: React.FC<FeedPostProps> = ({ post }) => {
     const [voteState, setVoteState] = useState<'up' | 'down' | undefined>(post.userVote);
     const [score, setScore] = useState(post.likes);
 
-    const handleVote = (type: 'up' | 'down') => {
+    const handleVote = useCallback((type: 'up' | 'down') => {
         if (voteState === type) {
             // Toggle off
             setVoteState(undefined);
@@ -34,9 +34,9 @@ const FeedPost: React.FC<FeedPostProps> = ({ post }) => {
             setScore(prev => prev + diff);
         }
         // Mock API call would go here
-    };
+    }, [voteState]);
 
-    const handleAddTopLevelComment = async () => {
+    const handleAddTopLevelComment = useCallback(async () => {
         if (!newComment.trim()) return;
 
         // Optimistic Update
@@ -60,9 +60,9 @@ const FeedPost: React.FC<FeedPostProps> = ({ post }) => {
 
         // API Call (Mock)
         await addComment(localPost.id, newComment);
-    };
+    }, [newComment, localPost]);
 
-    const handleReply = async (parentId: string, content: string) => {
+    const handleReply = useCallback(async (parentId: string, content: string) => {
         // Helper to recursively find and add reply
         const addReplyToTree = (comments: Comment[]): Comment[] => {
             return comments.map(c => {
@@ -83,15 +83,15 @@ const FeedPost: React.FC<FeedPostProps> = ({ post }) => {
             });
         };
 
-        setLocalPost({
-            ...localPost,
-            comments: addReplyToTree(localPost.comments),
-            commentsCount: localPost.commentsCount + 1
-        });
+        setLocalPost(prev => ({
+            ...prev,
+            comments: addReplyToTree(prev.comments),
+            commentsCount: prev.commentsCount + 1
+        }));
 
         // Backend call (Fire and forget for mock)
         await addComment(localPost.id, content, parentId);
-    };
+    }, [localPost.id]);
 
     return (
         <div style={{
@@ -128,18 +128,20 @@ const FeedPost: React.FC<FeedPostProps> = ({ post }) => {
                 </p>
 
                 {/* Tags */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                    {post.tags.map(tag => (
-                        <span key={tag} style={{
-                            fontSize: '0.75rem',
-                            color: 'var(--color-accent)',
-                            background: 'rgba(var(--color-accent-rgb), 0.1)',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontWeight: 500
-                        }}>{tag}</span>
-                    ))}
-                </div>
+                {useMemo(() => (
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                        {post.tags.map(tag => (
+                            <span key={tag} style={{
+                                fontSize: '0.75rem',
+                                color: 'var(--color-accent)',
+                                background: 'rgba(var(--color-accent-rgb), 0.1)',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontWeight: 500
+                            }}>{tag}</span>
+                        ))}
+                    </div>
+                ), [post.tags])}
 
                 {/* Action Bar */}
                 <div style={{
@@ -302,4 +304,4 @@ const FeedPost: React.FC<FeedPostProps> = ({ post }) => {
     );
 };
 
-export default FeedPost;
+export default React.memo(FeedPost);

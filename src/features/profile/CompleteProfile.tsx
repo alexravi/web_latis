@@ -143,123 +143,217 @@ const CompleteProfile: React.FC = () => {
     }
 
     return (
-        <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', display: 'flex' }}>
+        <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
             <SEO title="Complete Profile" description="Finalize your provider profile" />
             <div style={{ position: 'absolute', inset: 0, zIndex: -1 }}>
                 <GridBackground />
             </div>
 
-            {/* Sidebar / Progress */}
-            <div className="progress-sidebar" style={{
-                width: '300px',
-                background: 'var(--color-bg)',
-                borderRight: '1px solid var(--color-grid)',
-                padding: '4rem 2rem',
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'fixed',
-                height: '100vh',
-                zIndex: 10
+            {/* Mobile Header / Stepper */}
+            <div className="mobile-stepper" style={{
+                padding: '16px',
+                background: 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)',
+                borderBottom: '1px solid var(--color-grid)',
+                position: 'sticky',
+                top: 0,
+                zIndex: 50,
+                display: 'none' // Default hidden, shown via media query
             }}>
-                <div style={{ marginBottom: '3rem' }}>
-                    <h2 style={{ fontSize: '1.2rem', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>LATIS</h2>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                        PROVIDER ONBOARDING
-                    </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontWeight: 700 }}>STEP {currentStep + 1}/{STEPS.length}</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{STEPS[currentStep].title}</div>
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {STEPS.map((step, idx) => (
-                        <div key={idx} style={{
-                            display: 'flex',
-                            gap: '1rem',
-                            opacity: currentStep === idx ? 1 : idx < currentStep ? 0.6 : 0.3,
-                            transition: 'opacity 0.3s'
-                        }}>
-                            <div style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                border: '1px solid currentColor',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.8rem',
-                                background: currentStep === idx ? 'var(--color-accent)' : 'transparent',
-                                color: currentStep === idx ? 'white' : 'inherit',
-                                borderColor: currentStep === idx ? 'var(--color-accent)' : 'currentColor'
-                            }}>
-                                {idx + 1}
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{step.title}</div>
-                                <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>{step.description}</div>
-                            </div>
-                        </div>
-                    ))}
+                <div style={{ height: '4px', background: 'var(--color-grid)', marginTop: '8px', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{
+                        height: '100%',
+                        width: `${((currentStep + 1) / STEPS.length) * 100}%`,
+                        background: 'var(--color-accent)',
+                        transition: 'width 0.3s ease'
+                    }} />
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div style={{ marginLeft: '300px', flex: 1, padding: '4rem', background: 'var(--color-bg)' }}>
-                <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                    <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                        {STEPS[currentStep].title.toUpperCase()}
-                    </h1>
-                    <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginBottom: '3rem' }}>
-                        STEP {currentStep + 1} OF {STEPS.length}
-                    </p>
+            <div style={{ display: 'flex', flex: 1 }}>
+                {/* Sidebar / Progress (Desktop) */}
+                <div className="desktop-sidebar" style={{
+                    width: '320px',
+                    background: 'rgba(255,255,255,0.6)',
+                    backdropFilter: 'blur(12px)',
+                    borderRight: '1px solid var(--color-grid)',
+                    padding: '3rem 2rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'sticky',
+                    top: 0,
+                    height: '100vh',
+                    zIndex: 10
+                }}>
+                    <div style={{ marginBottom: '4rem' }}>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+                            LATIS<span style={{ color: 'var(--color-accent)' }}>/</span>MD
+                        </h2>
+                        <div style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.75rem',
+                            color: 'var(--color-text-muted)',
+                            letterSpacing: '0.05em'
+                        }}>
+                            PROVIDER ONBOARDING
+                        </div>
+                    </div>
 
-                    {currentStep === 0 && (
-                        <BasicInfoStep
-                            data={formData.user || {}}
-                            updateData={updateUserData}
-                            onNext={handleNext}
-                        />
-                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                        {STEPS.map((step, idx) => {
+                            const isActive = currentStep === idx;
+                            const isCompleted = idx < currentStep;
 
-                    {currentStep === 1 && (
-                        <ProfessionalDetailsStep
-                            experiences={formData.experiences || []}
-                            education={formData.education || []}
-                            updateExperiences={updateExperiences}
-                            updateEducation={updateEducation}
-                            onBack={handleBack}
-                            onNext={handleNext}
-                        />
-                    )}
+                            return (
+                                <div key={idx} style={{ position: 'relative', paddingBottom: idx === STEPS.length - 1 ? 0 : '2rem' }}>
+                                    {/* Connectivity Line */}
+                                    {idx !== STEPS.length - 1 && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            left: '15px',
+                                            top: '30px',
+                                            bottom: '-6px',
+                                            width: '2px',
+                                            background: isCompleted ? 'var(--color-accent)' : 'var(--color-grid)',
+                                            transition: 'background 0.3s'
+                                        }} />
+                                    )}
 
-                    {currentStep === 2 && (
-                        <SkillsAndCertificationsStep
-                            skills={formData.skills || []}
-                            certifications={formData.certifications || []}
-                            updateSkills={updateSkills}
-                            updateCertifications={updateCertifications}
-                            onBack={handleBack}
-                            onNext={handleNext}
-                        />
-                    )}
+                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                                        {/* Circle Indicator */}
+                                        <div style={{
+                                            width: '32px',
+                                            height: '32px',
+                                            borderRadius: '50%',
+                                            border: isActive || isCompleted ? 'unset' : '1px solid var(--color-grid)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 600,
+                                            background: isActive ? 'var(--color-accent)' : isCompleted ? 'var(--color-accent)' : 'white',
+                                            color: isActive || isCompleted ? 'white' : 'var(--color-text-muted)',
+                                            zIndex: 2,
+                                            boxShadow: isActive ? '0 4px 12px rgba(var(--color-accent-rgb), 0.3)' : 'none',
+                                            transition: 'all 0.3s'
+                                        }}>
+                                            {isCompleted ? '✓' : idx + 1}
+                                        </div>
 
-                    {currentStep === 3 && (
-                        <AdditionalInfoStep
-                            data={formData.profile || {}}
-                            updateData={updateProfileData}
-                            onBack={handleBack}
-                            onSubmit={handleSubmit}
-                            isSubmitting={isSubmitting}
-                        />
-                    )}
+                                        <div style={{ paddingTop: '4px', opacity: isActive ? 1 : 0.6, transition: 'opacity 0.3s' }}>
+                                            <div style={{
+                                                fontWeight: isActive ? 700 : 500,
+                                                fontSize: '1rem',
+                                                color: isActive ? 'var(--color-fg)' : 'var(--color-text-main)'
+                                            }}>
+                                                {step.title}
+                                            </div>
+                                            <div style={{
+                                                fontSize: '0.8rem',
+                                                color: 'var(--color-text-muted)',
+                                                marginTop: '2px'
+                                            }}>
+                                                {step.description}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Main Content */}
+                <div className="main-content" style={{ flex: 1, padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ maxWidth: '800px', width: '100%', margin: '0 auto' }}>
+
+                        {/* Glass Card Container */}
+                        <div style={{
+                            background: 'rgba(255, 255, 255, 0.7)',
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.5)',
+                            borderRadius: '24px',
+                            padding: '3rem',
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.05)'
+                        }}>
+                            <div style={{ marginBottom: '2.5rem' }}>
+                                <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+                                    {STEPS[currentStep].title}
+                                </h1>
+                                <p style={{ fontSize: '1rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                                    Please provide your {STEPS[currentStep].title.toLowerCase()} details to complete your professional profile.
+                                </p>
+                            </div>
+
+                            {currentStep === 0 && (
+                                <BasicInfoStep
+                                    data={formData.user || {}}
+                                    updateData={updateUserData}
+                                    onNext={handleNext}
+                                />
+                            )}
+
+                            {currentStep === 1 && (
+                                <ProfessionalDetailsStep
+                                    experiences={formData.experiences || []}
+                                    education={formData.education || []}
+                                    updateExperiences={updateExperiences}
+                                    updateEducation={updateEducation}
+                                    onBack={handleBack}
+                                    onNext={handleNext}
+                                />
+                            )}
+
+                            {currentStep === 2 && (
+                                <SkillsAndCertificationsStep
+                                    skills={formData.skills || []}
+                                    certifications={formData.certifications || []}
+                                    updateSkills={updateSkills}
+                                    updateCertifications={updateCertifications}
+                                    onBack={handleBack}
+                                    onNext={handleNext}
+                                />
+                            )}
+
+                            {currentStep === 3 && (
+                                <AdditionalInfoStep
+                                    data={formData.profile || {}}
+                                    updateData={updateProfileData}
+                                    onBack={handleBack}
+                                    onSubmit={handleSubmit}
+                                    isSubmitting={isSubmitting}
+                                />
+                            )}
+                        </div>
+
+                    </div>
+
+                    <div style={{ marginTop: 'auto', paddingTop: '2rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+                        &copy; {new Date().getFullYear()} Latis Medical Systems. All rights reserved.
+                    </div>
                 </div>
             </div>
 
             <style>{`
                 @media (max-width: 900px) {
-                    .progress-sidebar {
+                    .desktop-sidebar {
                         display: none !important;
                     }
-                    div[style*="marginLeft: 300px"] {
-                        margin-left: 0 !important;
-                        padding: 2rem !important;
+                    .mobile-stepper {
+                        display: block !important;
+                    }
+                    .main-content {
+                        padding: 1.5rem !important;
+                    }
+                    div[style*="padding: 3rem"] {
+                         padding: 1.5rem !important;
+                    }
+                    h1 {
+                        font-size: 1.5rem !important;
                     }
                 }
             `}</style>

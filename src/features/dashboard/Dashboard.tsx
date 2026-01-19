@@ -1,57 +1,65 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import AppHeader from './AppHeader';
 import GridBackground from '../landing/GridBackground';
 import SEO from '../../components/SEO';
 import ProfileCompletionWidget from './components/ProfileCompletionWidget';
-import { getProfile } from '../../services/profileService';
-import type { Post } from '../../types/PostTypes';
-import { getPosts } from '../../services/postService';
+import { useProfile } from '../../hooks/useProfile';
+import { useInfinitePosts } from '../../hooks/usePosts';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import FeedPost from '../feed/FeedPost';
+import PostSkeleton from '../../components/skeletons/PostSkeleton';
 
 const Dashboard: React.FC = () => {
-    // Real Data State
-    const [userProfile, setUserProfile] = React.useState<any>(null);
-    const [isLoading, setIsLoading] = React.useState(true);
+    // Use React Query hooks for data fetching
+    const { data: userProfile, isLoading: isProfileLoading } = useProfile();
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading: isPostsLoading,
+    } = useInfinitePosts(10);
 
-    // Feed State
-    const [posts, setPosts] = React.useState<Post[]>([]);
+    // Flatten pages into single array
+    const posts = useMemo(() => {
+        return data?.pages.flatMap((page) => page) || [];
+    }, [data]);
 
-    React.useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                // converted from dynamic import
-                const data = await getProfile();
-                setUserProfile(data);
+    // Infinite scroll observer
+    const observerTarget = useInfiniteScroll({
+        hasNextPage: hasNextPage ?? false,
+        isFetchingNextPage: isFetchingNextPage,
+        fetchNextPage,
+    });
 
-                // Fetch Feed
-                const feedData = await getPosts();
-                setPosts(feedData);
-            } catch (error) {
-                console.error('Failed to fetch dashboard data:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchProfile();
-    }, []);
+    const isLoading = isProfileLoading || isPostsLoading;
 
-    // Fallback/Default values if data is missing
-    const displayName = userProfile?.user?.first_name
+    // Fallback/Default values if data is missing - memoized
+    const displayName = useMemo(() => 
+        userProfile?.user?.first_name
         ? `${userProfile.user.first_name} ${userProfile.user.last_name}`
-        : "User";
+            : "User",
+        [userProfile?.user?.first_name, userProfile?.user?.last_name]
+    );
 
-    const displayTitle = userProfile?.user?.current_role || "Medical Professional";
-    const displayInstitution = userProfile?.user?.location || "";
+    const displayTitle = useMemo(() => 
+        userProfile?.user?.current_role || "Medical Professional",
+        [userProfile?.user?.current_role]
+    );
 
-    // Trending Data (Static)
+    const displayInstitution = useMemo(() => 
+        userProfile?.user?.location || "",
+        [userProfile?.user?.location]
+    );
 
-    const trending = [
+    // Trending Data (Static) - memoized
+    const trending = useMemo(() => [
         "New Board Guidelines: Sepsis",
         "Conference: Neuro 2026",
         "Residency Match Results",
         "Telehealth Billing Codes"
-    ];
+    ], []);
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -185,9 +193,32 @@ const Dashboard: React.FC = () => {
 
                         {/* Feed Stream */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {posts.map((post) => (
-                                <FeedPost key={post.id} post={post} />
-                            ))}
+                            {isPostsLoading && posts.length === 0 ? (
+                                <>
+                                    <PostSkeleton />
+                                    <PostSkeleton />
+                                    <PostSkeleton />
+                                </>
+                            ) : posts.length === 0 ? (
+                                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                                    No posts yet. Start a discussion!
+                                </div>
+                            ) : (
+                                <>
+                                    {posts.map((post) => (
+                                        <FeedPost key={post.id} post={post} />
+                                    ))}
+                                    {/* Infinite scroll trigger */}
+                                    <div ref={observerTarget} style={{ height: '20px' }}>
+                                        {isFetchingNextPage && <PostSkeleton />}
+                                    </div>
+                                    {!hasNextPage && posts.length > 0 && (
+                                        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                                            No more posts to load
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
 

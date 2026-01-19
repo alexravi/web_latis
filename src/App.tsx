@@ -1,10 +1,15 @@
 import AppRoutes from './routes/AppRoutes'
+import ErrorBoundary from './components/ErrorBoundary'
+import OfflineBanner from './components/OfflineBanner'
 
 function App() {
   return (
-    <div className="app-container">
-      <AppRoutes />
-    </div>
+    <ErrorBoundary>
+      <OfflineBanner />
+      <div className="app-container">
+        <AppRoutes />
+      </div>
+    </ErrorBoundary>
   )
 }
 
