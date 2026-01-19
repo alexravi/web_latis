@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { Comment } from '../../../types/PostTypes';
+import { upvoteComment, downvoteComment } from '../../../services/commentService';
+import VoteButtons from './VoteButtons';
 
 interface CommentNodeProps {
     comment: Comment;
     depth?: number;
-    onReply: (parentId: string, content: string) => void;
+    onReply: (parentId: number, content: string) => void;
 }
 
 const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState('');
+
+    const handleVote = useCallback(async (type: 'upvote' | 'downvote') => {
+        if (type === 'upvote') {
+            await upvoteComment(comment.id);
+        } else {
+            await downvoteComment(comment.id);
+        }
+    }, [comment.id]);
 
     const handleReplySubmit = () => {
         if (!replyContent.trim()) return;
@@ -19,18 +29,14 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
         setReplyContent('');
     };
 
-    // Color bar for threaded view based on depth (cycling colors)
-
-
-
     if (isCollapsed) {
         return (
             <div style={{ marginLeft: depth > 0 ? '16px' : '0', marginTop: '12px', opacity: 0.6 }}>
                 <span
-                    style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+                    style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-text-muted)' }}
                     onClick={() => setIsCollapsed(false)}
                 >
-                    [+] {comment.author.name} <span style={{ fontWeight: 400 }}>({comment.replies.length} children)</span>
+                    [+] {comment.first_name} {comment.last_name} <span style={{ fontWeight: 400 }}>({comment.replies_count || 0} children)</span>
                 </span>
             </div>
         );
@@ -60,10 +66,10 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                         cursor: 'pointer',
                         overflow: 'hidden'
                     }} onClick={() => setIsCollapsed(true)}>
-                        {comment.author.avatar ? (
-                            <img src={comment.author.avatar} alt={comment.author.name} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                        {comment.profile_image_url ? (
+                            <img src={comment.profile_image_url} alt={comment.first_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
-                            comment.author.name[0]
+                            comment.first_name[0]
                         )}
                     </div>
 
@@ -74,16 +80,17 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                             style={{
                                 width: '2px',
                                 flexGrow: 1,
-                                background: 'rgba(255,255,255,0.1)', // Subtle gray
+                                background: 'rgba(255,255,255,0.05)',
                                 marginTop: '6px',
                                 marginBottom: '6px',
                                 borderRadius: '2px',
                                 cursor: 'pointer',
-                                transition: 'background 0.2s'
+                                transition: 'background 0.2s',
+                                minHeight: comment.replies && comment.replies.length > 0 ? '100%' : '0'
                             }}
                             onClick={() => setIsCollapsed(true)}
                             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-accent)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                         />
                     )}
                 </div>
@@ -93,42 +100,34 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
 
                     {/* Meta Header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', marginBottom: '6px' }}>
-                        <span style={{ fontWeight: 600, color: 'var(--color-fg)' }}>{comment.author.name}</span>
-                        <span style={{
-                            background: 'rgba(255,255,255,0.1)',
-                            padding: '1px 6px',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            color: 'var(--color-text-muted)'
-                        }}>
-                            {comment.author.role}
-                        </span>
-                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>• {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--color-fg)' }}>{comment.first_name} {comment.last_name}</span>
+                        {/* Role isn't in new Comment object immediately, assume simple display or if user details enriched */}
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>• {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
 
                     {/* Body */}
-                    <div style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.9)' }}>
+                    <div style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.9)', whiteSpace: 'pre-wrap' }}>
                         {comment.content}
                     </div>
 
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: '16px', marginTop: '10px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
-                        <button
-                            className="action-btn"
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit', padding: '4px 0' }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" /></svg>
-                            {comment.likes}
-                        </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                        <VoteButtons
+                            upvotes={comment.upvotes_count}
+                            downvotes={comment.downvotes_count}
+                            userVote={comment.user_vote}
+                            onVote={handleVote}
+                            size="sm"
+                        />
+
                         <button
                             className="action-btn"
                             onClick={() => setIsReplying(!isReplying)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit', padding: '4px 0' }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit', padding: '4px 0', outline: 'none' }}
                         >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                             Reply
                         </button>
-                        <button className="action-btn" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '4px 0' }}>Share</button>
                     </div>
 
                     {/* Reply Input with animation */}
@@ -152,7 +151,8 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                                         fontSize: '0.95rem',
                                         fontFamily: 'inherit',
                                         minHeight: '80px',
-                                        resize: 'vertical'
+                                        resize: 'vertical',
+                                        outline: 'none'
                                     }}
                                     autoFocus
                                 />
@@ -179,8 +179,14 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                     )}
                 </div>
             </div>
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-5px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </div>
     );
 };
 
-export default CommentNode;
+export default React.memo(CommentNode);

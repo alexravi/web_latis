@@ -34,6 +34,20 @@ app.use(compression());
 let requestCounts = new Map();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
 const RATE_LIMIT_MAX = 100; // requests per window
+const CLEANUP_INTERVAL = 60 * 60 * 1000; // Clean up expired entries every hour
+
+// Cleanup function to remove expired entries
+function cleanupExpiredEntries() {
+  const now = Date.now();
+  for (const [ip, record] of requestCounts.entries()) {
+    if (now > record.resetTime) {
+      requestCounts.delete(ip);
+    }
+  }
+}
+
+// Periodic cleanup to prevent memory leaks
+setInterval(cleanupExpiredEntries, CLEANUP_INTERVAL);
 
 app.use((req, res, next) => {
   const ip = req.ip || req.connection.remoteAddress;
@@ -46,9 +60,10 @@ app.use((req, res, next) => {
   
   const record = requestCounts.get(ip);
   
+  // If the window has expired, remove the entry and create a new one
   if (now > record.resetTime) {
-    record.count = 1;
-    record.resetTime = now + RATE_LIMIT_WINDOW;
+    requestCounts.delete(ip);
+    requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return next();
   }
   

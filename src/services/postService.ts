@@ -1,85 +1,74 @@
 import api from './api';
-import type { Post, Comment } from '../types/PostTypes';
+import type { Post, PaginatedResponse, SingleResponse, PostType, Visibility } from '../types/PostTypes';
 
-export interface GetPostsParams {
-    offset?: number;
-    limit?: number;
-}
+// --- Feed & Posts ---
 
-export const getPosts = async (options?: GetPostsParams): Promise<Post[]> => {
-    try {
-        const response = await api.get('/posts', {
-            params: {
-                offset: options?.offset || 0,
-                limit: options?.limit || 20,
-            },
-        });
-        return response.data.data || response.data || [];
-    } catch (error) {
-        console.error('Error fetching posts:', error);
-        // Fallback to empty array on error
-        return [];
-    }
+export const getFeed = async (sort = 'new', limit = 20, offset = 0): Promise<PaginatedResponse<Post>> => {
+    const response = await api.get<PaginatedResponse<Post>>('/posts', {
+        params: { sort, limit, offset }
+    });
+    return response.data;
 };
 
-export const getPostById = async (id: string): Promise<Post | undefined> => {
-    try {
-        const response = await api.get(`/posts/${id}`);
-        return response.data.data || response.data;
-    } catch (error) {
-        console.error('Error fetching post:', error);
-        return undefined;
-    }
+export const getPostById = async (id: number): Promise<Post> => {
+    const response = await api.get<SingleResponse<Post>>(`/posts/${id}`);
+    return response.data.data;
 };
 
-export const createPost = async (data: { content: string; tags?: string[] }): Promise<Post> => {
-    const response = await api.post('/posts', data);
-    return response.data.data || response.data;
+export const createPost = async (content: string, postType: PostType = 'post', visibility: Visibility = 'public'): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>('/posts', {
+        content,
+        post_type: postType,
+        visibility
+    });
+    return response.data.data;
 };
 
-export const updatePost = async (id: string, data: { content?: string; tags?: string[] }): Promise<Post> => {
-    const response = await api.put(`/posts/${id}`, data);
-    return response.data.data || response.data;
+export const updatePost = async (id: number, data: { content?: string; post_type?: PostType; visibility?: Visibility; is_pinned?: boolean }): Promise<Post> => {
+    const response = await api.put<SingleResponse<Post>>(`/posts/${id}`, data);
+    return response.data.data;
 };
 
-export const deletePost = async (id: string): Promise<void> => {
+export const deletePost = async (id: number): Promise<void> => {
     await api.delete(`/posts/${id}`);
 };
 
-export const likePost = async (id: string): Promise<Post> => {
-    const response = await api.post(`/posts/${id}/like`);
-    return response.data.data || response.data;
+// --- Voting ---
+
+export const upvotePost = async (id: number): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>(`/posts/${id}/upvote`);
+    return response.data.data;
 };
 
-export const getPostComments = async (postId: string, options?: { offset?: number; limit?: number }): Promise<Comment[]> => {
-    try {
-        const response = await api.get(`/posts/${postId}/comments`, {
-            params: {
-                offset: options?.offset || 0,
-                limit: options?.limit || 50,
-            },
-        });
-        return response.data.data || response.data || [];
-    } catch (error) {
-        console.error('Error fetching comments:', error);
-        return [];
-    }
+export const downvotePost = async (id: number): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>(`/posts/${id}/downvote`);
+    return response.data.data;
 };
 
-export const addComment = async (postId: string, content: string, parentCommentId?: string): Promise<Comment> => {
-    const endpoint = parentCommentId 
-        ? `/comments/${parentCommentId}/replies`
-        : `/posts/${postId}/comments`;
-    
-    const response = await api.post(endpoint, { content });
-    return response.data.data || response.data;
+export const removePostVote = async (id: number): Promise<Post> => {
+    const response = await api.delete<SingleResponse<Post>>(`/posts/${id}/vote`);
+    return response.data.data;
 };
 
-export const updateComment = async (id: string, content: string): Promise<Comment> => {
-    const response = await api.put(`/comments/${id}`, { content });
-    return response.data.data || response.data;
+// --- Reposts ---
+
+export const repostPost = async (id: number): Promise<Post> => {
+    const response = await api.post<SingleResponse<Post>>(`/posts/${id}/repost`);
+    return response.data.data;
 };
 
-export const deleteComment = async (id: string): Promise<void> => {
-    await api.delete(`/comments/${id}`);
+export const unrepostPost = async (id: number): Promise<void> => {
+    await api.delete(`/posts/${id}/repost`);
+};
+
+export const getReposts = async (id: number, limit = 50, offset = 0): Promise<PaginatedResponse<Post>> => {
+    const response = await api.get<PaginatedResponse<Post>>(`/posts/${id}/reposts`, {
+        params: { limit, offset }
+    });
+    return response.data;
+};
+
+export const checkReposted = async (id: number): Promise<{ has_reposted: boolean; repost_id?: number }> => {
+    const response = await api.get<SingleResponse<{ has_reposted: boolean; repost_id?: number }>>(`/posts/${id}/reposted`);
+    return response.data.data;
 };
