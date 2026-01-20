@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import type { Post, Comment, PaginatedResponse } from '../../types/PostTypes';
 import { createComment, getPostComments } from '../../services/commentService';
 import CommentTree from './components/CommentTree';
@@ -14,6 +15,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
     const [newComment, setNewComment] = useState('');
     const [sort, setSort] = useState('best');
     const [isLoadingComments, setIsLoadingComments] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Fetch comments when modal opens or post/sort changes
     useEffect(() => {
@@ -43,12 +45,17 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
     const handleAddTopLevelComment = async () => {
         if (!newComment.trim() || !post) return;
 
+        setIsSubmitting(true);
         try {
             const addedComment = await createComment(post.id, newComment);
             setComments(prev => [addedComment, ...prev]);
             setNewComment('');
+            toast.success('Comment posted successfully');
         } catch (error) {
             console.error("Failed to post comment", error);
+            toast.error('Failed to post comment. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -77,8 +84,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
             };
 
             setComments(prev => insertReply(prev));
+            toast.success('Reply posted successfully');
         } catch (error) {
             console.error("Failed to post reply", error);
+            toast.error('Failed to post reply. Please try again.');
+            throw error; // Propagate error so CommentNode knows not to close
         }
     }, [post]);
 
@@ -219,10 +229,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                                 fontWeight: 500
                             }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.upvotes_count}</span> Upvotes
+                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.upvotes_count || 0}</span> Upvotes
                                 </span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.comments_count}</span> Comments
+                                    <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.comments_count || 0}</span> Comments
                                 </span>
                             </div>
                         </div>
@@ -279,10 +289,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                                                     borderRadius: '24px',
                                                     fontWeight: 600,
                                                     cursor: newComment.trim() ? 'pointer' : 'default',
-                                                    transition: 'all 0.2s'
+                                                    transition: 'all 0.2s',
+                                                    opacity: isSubmitting ? 0.7 : 1
                                                 }}
                                             >
-                                                Comment
+                                                {isSubmitting ? 'Posting...' : 'Comment'}
                                             </button>
                                         </div>
                                     </div>

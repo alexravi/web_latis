@@ -2,11 +2,15 @@ import api from './api';
 import type { Comment, PaginatedResponse, SingleResponse } from '../types/PostTypes';
 
 export const createComment = async (postId: number, content: string, parentCommentId: number | null = null): Promise<Comment> => {
-    const response = await api.post<SingleResponse<Comment>>('/comments', {
+    const payload: any = {
         content,
-        post_id: postId,
-        parent_comment_id: parentCommentId
-    });
+        post_id: postId
+    };
+    if (parentCommentId) {
+        payload.parent_comment_id = parentCommentId;
+    }
+
+    const response = await api.post<SingleResponse<Comment>>('/comments', payload);
     return response.data.data;
 };
 
