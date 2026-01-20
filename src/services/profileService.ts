@@ -19,6 +19,7 @@ export interface UserProfile {
     fellowship_completion_year?: number;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any; // Allow flexibility
+    relationship?: import('../types/relationship').RelationshipStatus;
 }
 
 export interface ExtendedProfile {
