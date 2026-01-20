@@ -6,13 +6,14 @@ import VoteButtons from './VoteButtons';
 interface CommentNodeProps {
     comment: Comment;
     depth?: number;
-    onReply: (parentId: number, content: string) => void;
+    onReply: (parentId: number, content: string) => Promise<void>;
 }
 
 const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleVote = useCallback(async (type: 'upvote' | 'downvote') => {
         if (type === 'upvote') {
@@ -22,11 +23,19 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
         }
     }, [comment.id]);
 
-    const handleReplySubmit = () => {
+    const handleReplySubmit = async () => {
         if (!replyContent.trim()) return;
-        onReply(comment.id, replyContent);
-        setIsReplying(false);
-        setReplyContent('');
+
+        setIsSubmitting(true);
+        try {
+            await onReply(comment.id, replyContent);
+            setIsReplying(false);
+            setReplyContent('');
+        } catch (error) {
+            // Error is handled by parent toast, we just keep the form open
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (isCollapsed) {
@@ -113,8 +122,8 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                     {/* Actions */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
                         <VoteButtons
-                            upvotes={comment.upvotes_count}
-                            downvotes={comment.downvotes_count}
+                            upvotes={comment.upvotes_count || 0}
+                            downvotes={comment.downvotes_count || 0}
                             userVote={comment.user_vote}
                             onVote={handleVote}
                             size="sm"
@@ -158,7 +167,7 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                                 />
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
                                     <button onClick={() => setIsReplying(false)} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid transparent', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-muted)', fontWeight: 600 }}>Cancel</button>
-                                    <button onClick={handleReplySubmit} style={{ padding: '8px 20px', borderRadius: '20px', border: 'none', background: 'var(--color-accent)', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Reply</button>
+                                    <button onClick={handleReplySubmit} disabled={isSubmitting} style={{ padding: '8px 20px', borderRadius: '20px', border: 'none', background: 'var(--color-accent)', color: 'white', fontWeight: 600, cursor: isSubmitting ? 'default' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}>{isSubmitting ? 'Posting...' : 'Reply'}</button>
                                 </div>
                             </div>
                         </div>

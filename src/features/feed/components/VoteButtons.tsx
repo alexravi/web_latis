@@ -10,8 +10,8 @@ interface VoteButtonsProps {
 }
 
 const VoteButtons: React.FC<VoteButtonsProps> = ({
-    upvotes,
-    downvotes,
+    upvotes = 0,
+    downvotes = 0,
     userVote,
     onVote,
     orientation = 'horizontal',

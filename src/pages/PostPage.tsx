@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Post, Comment, PaginatedResponse } from '../types/PostTypes';
 import { getPostById } from '../services/postService';
@@ -14,6 +15,7 @@ const PostPage: React.FC = () => {
     const [newComment, setNewComment] = useState('');
     const [sort, setSort] = useState('best');
     const [isLoadingComments, setIsLoadingComments] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -58,12 +60,17 @@ const PostPage: React.FC = () => {
     const handleAddTopLevelComment = async () => {
         if (!newComment.trim() || !post) return;
 
+        setIsSubmitting(true);
         try {
             const addedComment = await createComment(post.id, newComment);
             setComments(prev => [addedComment, ...prev]);
             setNewComment('');
+            toast.success('Comment posted successfully');
         } catch (error) {
             console.error("Failed to post comment", error);
+            toast.error('Failed to post comment. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -91,8 +98,11 @@ const PostPage: React.FC = () => {
             };
 
             setComments(prev => insertReply(prev));
+            toast.success('Reply posted successfully');
         } catch (error) {
             console.error("Failed to post reply", error);
+            toast.error('Failed to post reply. Please try again.');
+            throw error;
         }
     }, [post]);
 
@@ -168,10 +178,10 @@ const PostPage: React.FC = () => {
                     fontWeight: 500
                 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.upvotes_count}</span> Upvotes
+                        <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.upvotes_count || 0}</span> Upvotes
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.comments_count}</span> Comments
+                        <span style={{ color: 'var(--color-fg)', fontWeight: 700 }}>{post.comments_count || 0}</span> Comments
                     </span>
                 </div>
             </div>
@@ -203,7 +213,7 @@ const PostPage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                         <button
                             onClick={handleAddTopLevelComment}
-                            disabled={!newComment.trim()}
+                            disabled={!newComment.trim() || isSubmitting}
                             style={{
                                 padding: '10px 32px',
                                 background: newComment.trim() ? 'var(--color-accent)' : 'rgba(255,255,255,0.1)',
@@ -212,10 +222,11 @@ const PostPage: React.FC = () => {
                                 borderRadius: '24px',
                                 fontWeight: 600,
                                 cursor: newComment.trim() ? 'pointer' : 'default',
-                                transition: 'all 0.2s'
+                                transition: 'all 0.2s',
+                                opacity: isSubmitting ? 0.7 : 1
                             }}
                         >
-                            Comment
+                            {isSubmitting ? 'Posting...' : 'Comment'}
                         </button>
                     </div>
                 </div>
