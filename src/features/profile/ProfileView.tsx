@@ -14,6 +14,7 @@ import AboutModal from './modals/AboutModal';
 
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import RelationshipManager from '../../components/profile/RelationshipManager';
 
 // Icons (Simple SVGs)
 const EditIcon = () => (
@@ -272,7 +273,6 @@ const ProfileView: React.FC = () => {
                             500+ connections
                         </div>
 
-                        {/* Action Buttons */}
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
                             {isOwnProfile ? (
                                 <>
@@ -283,9 +283,11 @@ const ProfileView: React.FC = () => {
                                     </button>
                                 </>
                             ) : (
-                                <button className="btn-primary" style={{ width: '100%', borderRadius: '24px' }}>
-                                    Connect
-                                </button>
+                                <RelationshipManager
+                                    userId={user?.id}
+                                    initialRelationship={user?.relationship}
+                                    onUpdate={fetchData}
+                                />
                             )}
                         </div>
                     </GlassCard>
