@@ -12,11 +12,14 @@ import PostSkeleton from '../../components/skeletons/PostSkeleton';
 import CreatePost from '../feed/CreatePost';
 import PostDetailModal from '../feed/PostDetailModal';
 import type { Post } from '../../types/PostTypes';
+import { useQueryClient } from '@tanstack/react-query';
+import { postKeys } from '../../hooks/usePosts';
 
 const Dashboard: React.FC = () => {
     // Modal state
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const queryClient = useQueryClient();
 
     // Use React Query hooks for data fetching
     const { data: userProfile, isLoading: isProfileLoading } = useProfile();
@@ -139,16 +142,7 @@ const Dashboard: React.FC = () => {
                         {/* Post Input */}
                         <div style={{ marginBottom: '24px' }}>
                             <CreatePost onPostCreated={() => {
-                                // We can trigger a refresh manually or let React Query handle it via invalidation
-                                // For now, maybe just optimistic or rely on invalidation if we had access to queryClient here easily,
-                                // but CreatePost internally handled creation. 
-                                // Ideally we should pass a callback that refetches.
-                                // Since we use useInfinitePosts, we might want to refetch the first page.
-                                // Actually, useInfinitePosts returns `refetch`. But we destructured `fetchNextPage`.
-                                // Let's simplify and just rely on the feed being "eventually consistent" or user pull-to-refresh if we had one.
-                                // Or better: CreatePost doesn't need to do much if we invalidate queries.
-                                // But CreatePost takes `onPostCreated`.
-                                // Let's just log or toast for now.
+                                queryClient.invalidateQueries({ queryKey: postKeys.lists() });
                             }} />
                         </div>
 

@@ -258,7 +258,10 @@ const ProfileView: React.FC = () => {
                             </div>
                         </div>
 
-                        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '8px', color: 'var(--color-fg)', letterSpacing: '-0.02em' }}>{name}</h1>
+                        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '4px', color: 'var(--color-fg)', letterSpacing: '-0.02em' }}>{name}</h1>
+                        {user?.username && (
+                            <div style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '8px', fontFamily: 'var(--font-mono)' }}>@{user.username}</div>
+                        )}
                         <p style={{ fontSize: '1rem', color: 'var(--color-text-main)', marginBottom: '8px', lineHeight: 1.4 }}>
                             {user?.headline || user?.current_role || 'Medical Professional'}
                         </p>

@@ -1,8 +1,11 @@
 import React, { useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import type { Post } from '../../types/PostTypes';
 import { upvotePost, downvotePost, repostPost } from '../../services/postService';
 import VoteButtons from './components/VoteButtons';
 import RepostControl from './components/RepostControl';
+import { useQueryClient } from '@tanstack/react-query';
+import { postKeys } from '../../hooks/usePosts';
 
 interface FeedPostProps {
     post: Post;
@@ -11,27 +14,35 @@ interface FeedPostProps {
 
 const FeedPost: React.FC<FeedPostProps> = ({ post, onClick }) => {
     // If it's a repost, we display the "Who reposted" header and then render the original post content
-    const displayPost = post.is_repost && post.original_post ? post.original_post : post;
+    // contentPost is for Visuals (Avatar, Name, Text)
+    // interactionPost is for Actions (Vote, Comment Count, ID) - using the wrapper ensures we use the stats that exist
+    const contentPost = post.is_repost && post.original_post ? post.original_post : post;
+    const interactionPost = post;
     const isRepost = post.is_repost;
-
-
+    const queryClient = useQueryClient();
 
     const handleVote = useCallback(async (type: 'upvote' | 'downvote') => {
-        if (type === 'upvote') {
-            await upvotePost(displayPost.id);
-        } else {
-            await downvotePost(displayPost.id);
+        try {
+            if (type === 'upvote') {
+                await upvotePost(interactionPost.id);
+            } else {
+                await downvotePost(interactionPost.id);
+            }
+            // Invalidate to ensure consistency, though VoteButtons handles immediate UI
+            queryClient.invalidateQueries({ queryKey: postKeys.detail(interactionPost.id) });
+        } catch (error) {
+            console.error("Vote failed", error);
         }
-    }, [displayPost.id]);
+    }, [interactionPost.id, queryClient]);
 
     const handleRepost = useCallback(async () => {
         try {
-            await repostPost(displayPost.id);
+            await repostPost(interactionPost.id);
             // In a real app, we'd trigger a global feed refresh or toast here
         } catch (error) {
             console.error("Failed to repost", error);
         }
-    }, [displayPost.id]);
+    }, [interactionPost.id]);
 
     return (
         <div style={{
@@ -66,34 +77,40 @@ const FeedPost: React.FC<FeedPostProps> = ({ post, onClick }) => {
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        {displayPost.profile_image_url ? (
-                            <img
-                                src={displayPost.profile_image_url}
-                                alt={`${displayPost.first_name} ${displayPost.last_name}`}
-                                style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                            />
-                        ) : (
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #eee, #ccc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#555' }}>
-                                {displayPost.first_name[0]}
-                            </div>
-                        )}
-                        <div>
-                            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-fg)' }}>
-                                {displayPost.first_name} {displayPost.last_name}
-                            </h3>
-                            {displayPost.headline && (
-                                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{displayPost.headline}</p>
+                        <Link
+                            to={`/${contentPost.username || contentPost.user_id}`}
+                            style={{ textDecoration: 'none', color: 'inherit', display: 'flex', gap: '12px', alignItems: 'center' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {contentPost.profile_image_url ? (
+                                <img
+                                    src={contentPost.profile_image_url}
+                                    alt={`${contentPost.first_name} ${contentPost.last_name}`}
+                                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #eee, #ccc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#555' }}>
+                                    {contentPost.first_name[0]}
+                                </div>
                             )}
-                        </div>
+                            <div>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-fg)' }}>
+                                    {contentPost.first_name} {contentPost.last_name}
+                                </h3>
+                                {contentPost.headline && (
+                                    <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{contentPost.headline}</p>
+                                )}
+                            </div>
+                        </Link>
                     </div>
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                        {new Date(displayPost.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        {new Date(contentPost.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </span>
                 </div>
 
                 {/* Content */}
                 <p style={{ fontSize: '1.05rem', lineHeight: 1.6, marginBottom: '16px', color: 'var(--color-fg)', whiteSpace: 'pre-wrap' }}>
-                    {displayPost.content}
+                    {contentPost.content}
                 </p>
 
                 {/* Action Bar */}
@@ -108,9 +125,9 @@ const FeedPost: React.FC<FeedPostProps> = ({ post, onClick }) => {
                 >
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                         <VoteButtons
-                            upvotes={displayPost.upvotes_count || 0}
-                            downvotes={displayPost.downvotes_count || 0}
-                            userVote={displayPost.user_vote}
+                            upvotes={interactionPost.upvotes_count || 0}
+                            downvotes={interactionPost.downvotes_count || 0}
+                            userVote={interactionPost.user_vote}
                             onVote={handleVote}
                         />
 
@@ -138,11 +155,11 @@ const FeedPost: React.FC<FeedPostProps> = ({ post, onClick }) => {
                             }}
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
-                            {displayPost.comments_count || 0}
+                            {interactionPost.comments_count || 0}
                         </button>
 
                         <RepostControl
-                            count={displayPost.shares_count || 0}
+                            count={interactionPost.shares_count || 0}
                             isReposted={false} // API doesn't give us "isRepostedByMe" yet on the Post object easily without checking another endpoint, so implementing simpler for now or assuming false.
                             onRepost={handleRepost}
                         />

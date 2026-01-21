@@ -1,5 +1,6 @@
 import React from 'react';
 import type { UserProfile } from '../../../services/profileService';
+import { checkUsernameAvailability } from '../../../services/profileService';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
 
 interface Props {
@@ -14,8 +15,59 @@ const BasicInfoStep: React.FC<Props> = ({ data, updateData, onNext }) => {
         updateData({ [name]: value });
     };
 
+    const [usernameError, setUsernameError] = React.useState('');
+    const [isCheckingUsername, setIsCheckingUsername] = React.useState(false);
+    const [isUsernameAvailable, setIsUsernameAvailable] = React.useState<boolean | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const timeoutRef = React.useRef<any>(null);
+
+    const validateUsername = (val: string) => {
+        if (!val) return '';
+        if (val.length < 3) return 'Username must be at least 3 characters';
+        if (val.length > 30) return 'Username must be at most 30 characters';
+        if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/.test(val)) {
+            return 'Only letters, numbers, underscores, and hyphens allowed.';
+        }
+        return '';
+    };
+
+    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        updateData({ username: val });
+        setIsUsernameAvailable(null);
+
+        const error = validateUsername(val);
+        setUsernameError(error);
+
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        if (val && !error) {
+            setIsCheckingUsername(true);
+            timeoutRef.current = setTimeout(async () => {
+                try {
+                    const result = await checkUsernameAvailability(val);
+                    // If the username is the SAME as the current user's, it's "available" (to keep)
+                    // But here we are in "complete profile" - usually setting it for the first time.
+                    // If editing, we might need to handle "self" check, but the API usually handles "available except me" if auth'd.
+                    // The backend instructions say: "if authenticated, excludes current user from check" - PERFECT.
+                    setIsUsernameAvailable(result.available);
+                    if (!result.available) {
+                        setUsernameError('Username is already taken');
+                    }
+                } catch (err) {
+                    console.error('Error checking username:', err);
+                } finally {
+                    setIsCheckingUsername(false);
+                }
+            }, 500);
+        } else {
+            setIsCheckingUsername(false);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (usernameError) return; // Block submit
         onNext();
     };
 
@@ -45,6 +97,31 @@ const BasicInfoStep: React.FC<Props> = ({ data, updateData, onNext }) => {
                         placeholder="Last Name"
                     />
                 </div>
+            </div>
+
+            <div className="form-group">
+                <label>USERNAME</label>
+                <div style={{ position: 'relative' }}>
+                    <input
+                        type="text"
+                        name="username"
+                        value={data.username || ''}
+                        onChange={handleUsernameChange}
+                        placeholder="unique-handle"
+                        style={{
+                            borderColor: usernameError ? 'red' : (isUsernameAvailable ? 'green' : undefined)
+                        }}
+                    />
+                    {isCheckingUsername && (
+                        <span style={{ position: 'absolute', right: '10px', top: '14px', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Checking...</span>
+                    )}
+                </div>
+                {usernameError && (
+                    <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '4px' }}>{usernameError}</div>
+                )}
+                {isUsernameAvailable && !usernameError && (
+                    <div style={{ color: 'green', fontSize: '0.8rem', marginTop: '4px' }}>✓ Username available</div>
+                )}
             </div>
 
             <div className="form-group">

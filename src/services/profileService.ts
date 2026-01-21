@@ -20,6 +20,7 @@ export interface UserProfile {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any; // Allow flexibility
     relationship?: import('../types/relationship').RelationshipStatus;
+    username?: string;
 }
 
 export interface ExtendedProfile {
@@ -193,6 +194,17 @@ export const getProfile = async () => {
 
     // Fallback/Legacy structure
     return data;
+};
+
+
+
+export const checkUsernameAvailability = async (username: string) => {
+    try {
+        const response = await api.get(`/users/username/${username}/available`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 };
 
 export const getUserProfileById = async (id: string | number) => {

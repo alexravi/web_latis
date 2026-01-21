@@ -1,73 +1,104 @@
-# React + TypeScript + Vite
+# Latis - Professional Medical Network
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Latis is a specialized professional networking platform designed for medical practitioners. It enables doctors, specialists, and healthcare professionals to build their clinical graph, manage professional relationships, and facilitate secure consultations.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   **Professional Identity**: Create detailed profiles highlighting medical specialization, experience, education, and credentials.
+*   **Clinical Graph**:
+    *   **Connect**: Establish mutual connections with colleagues and peers.
+    *   **Follow**: Stay updated with industry leaders and researchers via one-way follows.
+    *   **Manage**: Detailed management of your "Clinical Nodes" (network) with real-time request handling.
+*   **Search**: Advanced search capabilities to find professionals by name, specialty, or location.
+*   **Privacy & Security**: Granular control over your network with blocking capabilities and secure data handling.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+*   **Frontend**: React 19, TypeScript
+*   **Build Tool**: Vite
+*   **Routing**: React Router v7
+*   **State & Data Fetching**: React Query (@tanstack/react-query)
+*   **Styling**: Vanilla CSS / CSS Modules with a custom responsive design system.
+*   **Authentication**: Firebase Auth (integrated)
+*   **HTTP Client**: Axios
 
-## Expanding the ESLint configuration
+## 📦 Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+*   Node.js (v18 or higher)
+*   npm (v9 or higher)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1.  **Clone the repository**
+    ```bash
+    git clone <repository-url>
+    cd frontend_latis
+    ```
+
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Setup**
+    Create a `.env` file in the root directory if one doesn't exist (copy from `.env.example` if available).
+    ```env
+    VITE_API_BASE_URL=http://localhost:3000/api
+    ```
+
+### Running Locally
+
+Start the development server:
+
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The application will be available at `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🏗️ Build & Deploy
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+To create a production build:
+
+```bash
+npm run build
 ```
+
+The build artifacts will be stored in the `dist/` directory.
+
+To preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── assets/          # Static assets (images, fonts, JSONs)
+├── components/      # Reusable UI components
+├── features/        # Feature-specific components and pages
+│   ├── auth/        # Authentication pages (Login, Signup)
+│   ├── dashboard/   # Dashboard layout and widgets
+│   ├── network/     # Network management (NodesPage)
+│   ├── profile/     # User profile implementation
+│   └── search/      # Search functionality
+├── services/        # API services types (relationshipService, profileService)
+├── styles/          # Global styles and variables
+└── types/           # Shared TypeScript interfaces
+```
+
+## 🤝 Contributing
+
+1.  Fork the repository.
+2.  Create a feature branch (`git checkout -b feature/amazing-feature`).
+3.  Commit your changes (`git commit -m 'Add some amazing feature'`).
+4.  Push to the branch (`git push origin feature/amazing-feature`).
+5.  Open a Pull Request.
+
+## 📄 License
+
+[License Name] - see the [LICENSE](LICENSE) file for details.

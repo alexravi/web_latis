@@ -13,6 +13,7 @@ const ProfileView = lazy(() => import('../features/profile/ProfileView'));
 const NodesPage = lazy(() => import('../features/network/NodesPage'));
 const SearchResultsPage = lazy(() => import('../pages/SearchResultsPage'));
 const SecureConsultsPage = lazy(() => import('../features/messaging/SecureConsultsPage'));
+const MessagingPage = lazy(() => import('../pages/MessagingPage'));
 const PostPage = lazy(() => import('../pages/PostPage'));
 
 const AppRoutes = () => {
@@ -76,6 +77,16 @@ const AppRoutes = () => {
                         <ProtectedRoute>
                             <Suspense fallback={<LoadingFallback message="Loading messages..." />}>
                                 <SecureConsultsPage />
+                            </Suspense>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/messages"
+                    element={
+                        <ProtectedRoute>
+                            <Suspense fallback={<LoadingFallback message="Loading chat..." />}>
+                                <MessagingPage />
                             </Suspense>
                         </ProtectedRoute>
                     }

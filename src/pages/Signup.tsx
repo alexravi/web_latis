@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import GridBackground from '../features/landing/GridBackground';
 import api from '../services/api';
+import { checkUsernameAvailability } from '../services/profileService';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
 
@@ -11,7 +12,55 @@ const Signup: React.FC = () => {
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+    const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // Debounce timer ref
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const timeoutRef = React.useRef<any>(null);
+
+    const validateUsername = (val: string) => {
+        if (!val) return '';
+        if (val.length < 3) return 'Username must be at least 3 characters';
+        if (val.length > 30) return 'Username must be at most 30 characters';
+        if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/.test(val)) {
+            return 'Only letters, numbers, underscores, and hyphens allowed.';
+        }
+        return '';
+    };
+
+    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setUsername(val);
+        setIsUsernameAvailable(null);
+
+        const error = validateUsername(val);
+        setUsernameError(error);
+
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        if (val && !error) {
+            setIsCheckingUsername(true);
+            timeoutRef.current = setTimeout(async () => {
+                try {
+                    const result = await checkUsernameAvailability(val);
+                    setIsUsernameAvailable(result.available);
+                    if (!result.available) {
+                        setUsernameError('Username is already taken');
+                    }
+                } catch (err) {
+                    console.error('Error checking username:', err);
+                } finally {
+                    setIsCheckingUsername(false);
+                }
+            }, 500);
+        } else {
+            setIsCheckingUsername(false);
+        }
+    };
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,7 +71,8 @@ const Signup: React.FC = () => {
                 email,
                 password,
                 first_name: firstName,
-                last_name: lastName
+                last_name: lastName,
+                username: username || undefined
             });
 
             if (response.data.success) {
@@ -145,6 +195,40 @@ const Signup: React.FC = () => {
                                 }}
                                 placeholder="doctor@hospital.org"
                             />
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '8px', color: 'var(--color-text-main)' }}>
+                                USERNAME (OPTIONAL)
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={handleUsernameChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        border: usernameError ? '1px solid red' : (isUsernameAvailable ? '1px solid green' : '1px solid var(--color-grid)'),
+                                        background: 'var(--color-bg)',
+                                        color: 'var(--color-text-main)',
+                                        borderRadius: '0',
+                                        fontSize: '1rem',
+                                        outline: 'none',
+                                        fontFamily: 'var(--font-mono)'
+                                    }}
+                                    placeholder="unique-handle"
+                                />
+                                {isCheckingUsername && (
+                                    <span style={{ position: 'absolute', right: '10px', top: '12px', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Checking...</span>
+                                )}
+                            </div>
+                            {usernameError && (
+                                <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '4px' }}>{usernameError}</div>
+                            )}
+                            {isUsernameAvailable && !usernameError && (
+                                <div style={{ color: 'green', fontSize: '0.8rem', marginTop: '4px' }}>✓ Username available</div>
+                            )}
                         </div>
 
                         <div>
