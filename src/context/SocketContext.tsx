@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { env } from '../config/env';
 
 
 interface SocketContextData {
@@ -24,7 +25,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         let newSocket: Socket | null = null;
 
         if (token) {
-            newSocket = io(import.meta.env.VITE_API_BASE_URL?.replace('/api', ''), {
+            newSocket = io(env.VITE_API_BASE_URL?.replace('/api', ''), {
                 auth: { token },
                 autoConnect: true,
                 withCredentials: true

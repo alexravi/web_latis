@@ -1,7 +1,8 @@
 import axios, { AxiosError } from 'axios';
+import { env } from '../config/env';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
+    baseURL: env.VITE_API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
