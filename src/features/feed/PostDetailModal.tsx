@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import type { Post, Comment, PaginatedResponse } from '../../types/PostTypes';
 import { createComment, getPostComments } from '../../services/commentService';
 import CommentTree from './components/CommentTree';
+import { useQueryClient } from '@tanstack/react-query';
+import { postKeys } from '../../hooks/usePosts';
 
 interface PostDetailModalProps {
     isOpen: boolean;
@@ -16,6 +19,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
     const [sort, setSort] = useState('best');
     const [isLoadingComments, setIsLoadingComments] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const queryClient = useQueryClient();
 
     // Fetch comments when modal opens or post/sort changes
     useEffect(() => {
@@ -51,6 +55,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
             setComments(prev => [addedComment, ...prev]);
             setNewComment('');
             toast.success('Comment posted successfully');
+            queryClient.invalidateQueries({ queryKey: postKeys.all });
         } catch (error) {
             console.error("Failed to post comment", error);
             toast.error('Failed to post comment. Please try again.');
@@ -85,6 +90,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
 
             setComments(prev => insertReply(prev));
             toast.success('Reply posted successfully');
+            queryClient.invalidateQueries({ queryKey: postKeys.all });
         } catch (error) {
             console.error("Failed to post reply", error);
             toast.error('Failed to post reply. Please try again.');
@@ -121,10 +127,9 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                 width: '100%',
                 maxWidth: '850px',
                 height: '92vh',
-                background: 'rgba(30,30,30, 0.6)', // Semi-transparent dark
-                backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                boxShadow: '0 32px 64px rgba(0,0,0,0.4)',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-grid)',
+                boxShadow: '0 32px 64px rgba(0,0,0,0.2)',
                 borderRadius: '24px',
                 position: 'relative',
                 display: 'flex',
@@ -135,11 +140,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                 {/* Sticky Header */}
                 <div style={{
                     padding: '20px 32px',
-                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    borderBottom: '1px solid var(--color-grid)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    background: 'rgba(30,30,30, 0.8)',
+                    background: 'var(--color-surface)',
                     zIndex: 10
                 }}>
                     <h2 style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--color-fg)' }}>
@@ -148,7 +153,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                     <button
                         onClick={onClose}
                         style={{
-                            background: 'rgba(255,255,255,0.05)',
+                            background: 'transparent',
                             border: 'none',
                             width: '32px',
                             height: '32px',
@@ -161,7 +166,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                             transition: 'all 0.2s',
                         }}
                         onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                            e.currentTarget.style.background = 'var(--color-bg-subtle)';
                             e.currentTarget.style.color = 'var(--color-fg)';
                         }}
                         onMouseLeave={(e) => {
@@ -180,38 +185,40 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                         {/* Original Post Content */}
                         <div style={{ marginBottom: '40px', padding: '0 32px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                                {post.profile_image_url ? (
-                                    <img src={post.profile_image_url} alt={post.first_name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }} />
-                                ) : (
-                                    <div style={{
-                                        width: '48px',
-                                        height: '48px',
-                                        borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, #4da6ff, #0066cc)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontWeight: '700',
-                                        color: 'white',
-                                        fontSize: '1.1rem',
-                                        boxShadow: '0 4px 12px rgba(0,102,204,0.3)'
-                                    }}>
-                                        {post.first_name[0]}
+                                <Link to={`/${post.username || post.user_id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    {post.profile_image_url ? (
+                                        <img src={post.profile_image_url} alt={post.first_name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }} />
+                                    ) : (
+                                        <div style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, #4da6ff, #0066cc)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontWeight: '700',
+                                            color: 'white',
+                                            fontSize: '1.1rem',
+                                            boxShadow: '0 4px 12px rgba(0,102,204,0.3)'
+                                        }}>
+                                            {post.first_name[0]}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--color-fg)' }}>{post.first_name} {post.last_name}</div>
+                                        <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                                            {post.headline || 'Member'} • <span style={{ opacity: 0.8 }}>{new Date(post.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</span>
+                                        </div>
                                     </div>
-                                )}
-                                <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--color-fg)' }}>{post.first_name} {post.last_name}</div>
-                                    <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                                        {post.headline || 'Member'} • <span style={{ opacity: 0.8 }}>{new Date(post.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</span>
-                                    </div>
-                                </div>
+                                </Link>
                             </div>
 
                             <p style={{
                                 fontSize: '1.15rem',
                                 lineHeight: 1.7,
                                 marginBottom: '24px',
-                                color: 'rgba(255,255,255,0.9)',
+                                color: 'var(--color-fg)',
                                 fontWeight: 400,
                                 whiteSpace: 'pre-wrap'
                             }}>
@@ -219,8 +226,8 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                             </p>
 
                             <div style={{
-                                borderTop: '1px solid rgba(255,255,255,0.08)',
-                                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                                borderTop: '1px solid var(--color-grid)',
+                                borderBottom: '1px solid var(--color-grid)',
                                 padding: '16px 0',
                                 display: 'flex',
                                 gap: '32px',
@@ -240,10 +247,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                         {/* Add Nested Comment Box */}
                         <div style={{ padding: '0 32px 32px 32px' }}>
                             <div style={{
-                                background: 'rgba(255,255,255,0.03)',
+                                background: 'var(--color-bg)',
                                 borderRadius: '16px',
                                 padding: '20px',
-                                border: '1px solid rgba(255,255,255,0.05)'
+                                border: '1px solid var(--color-grid)'
                             }}>
                                 <div style={{ display: 'flex', gap: '16px' }}>
                                     <div style={{
@@ -277,14 +284,14 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ isOpen, onClose, post
                                                 resize: 'vertical'
                                             }}
                                         />
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--color-grid)' }}>
                                             <button
                                                 onClick={handleAddTopLevelComment}
                                                 disabled={!newComment.trim()}
                                                 style={{
                                                     padding: '8px 24px',
-                                                    background: newComment.trim() ? 'var(--color-accent)' : 'rgba(255,255,255,0.1)',
-                                                    color: newComment.trim() ? 'white' : 'rgba(255,255,255,0.3)',
+                                                    background: newComment.trim() ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+                                                    color: newComment.trim() ? 'white' : 'var(--color-text-muted)',
                                                     border: 'none',
                                                     borderRadius: '24px',
                                                     fontWeight: 600,

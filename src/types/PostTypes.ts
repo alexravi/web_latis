@@ -4,6 +4,7 @@ export interface User {
     last_name: string;
     profile_image_url: string | null;
     headline: string | null;
+    username?: string;
 }
 
 export interface Comment {
@@ -20,6 +21,8 @@ export interface Comment {
     first_name: string;
     last_name: string;
     profile_image_url: string | null;
+    headline?: string;
+    username?: string;
     created_at: string;
     edited_at?: string;
     replies?: Comment[];
@@ -48,6 +51,7 @@ export interface Post {
     last_name: string;
     profile_image_url: string | null;
     headline: string | null;
+    username?: string;
     created_at: string;
     edited_at?: string;
 }

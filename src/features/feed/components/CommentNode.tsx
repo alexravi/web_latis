@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import type { Comment } from '../../../types/PostTypes';
 import { upvoteComment, downvoteComment } from '../../../services/commentService';
 import VoteButtons from './VoteButtons';
@@ -61,7 +62,7 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
             <div style={{ display: 'flex' }}>
                 {/* Left: Avatar / Thread Rail Container */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '28px', marginRight: '12px' }}>
-                    <div style={{
+                    <Link to={`/${comment.username || comment.user_id}`} style={{
                         width: '28px',
                         height: '28px',
                         borderRadius: '50%',
@@ -73,14 +74,15 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                         fontWeight: 'bold',
                         color: 'var(--color-text-muted)',
                         cursor: 'pointer',
-                        overflow: 'hidden'
-                    }} onClick={() => setIsCollapsed(true)}>
+                        overflow: 'hidden',
+                        textDecoration: 'none'
+                    }}>
                         {comment.profile_image_url ? (
                             <img src={comment.profile_image_url} alt={comment.first_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
                             comment.first_name[0]
                         )}
-                    </div>
+                    </Link>
 
                     {/* The Rail (Thread Line) */}
                     {!isCollapsed && (
@@ -89,7 +91,7 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                             style={{
                                 width: '2px',
                                 flexGrow: 1,
-                                background: 'rgba(255,255,255,0.05)',
+                                background: 'var(--color-grid)',
                                 marginTop: '6px',
                                 marginBottom: '6px',
                                 borderRadius: '2px',
@@ -99,7 +101,7 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                             }}
                             onClick={() => setIsCollapsed(true)}
                             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-accent)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--color-grid)'}
                         />
                     )}
                 </div>
@@ -109,13 +111,15 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
 
                     {/* Meta Header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', marginBottom: '6px' }}>
-                        <span style={{ fontWeight: 600, color: 'var(--color-fg)' }}>{comment.first_name} {comment.last_name}</span>
+                        <Link to={`/${comment.username || comment.user_id}`} style={{ fontWeight: 600, color: 'var(--color-fg)', textDecoration: 'none' }}>
+                            {comment.first_name} {comment.last_name}
+                        </Link>
                         {/* Role isn't in new Comment object immediately, assume simple display or if user details enriched */}
                         <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>• {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
 
                     {/* Body */}
-                    <div style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.9)', whiteSpace: 'pre-wrap' }}>
+                    <div style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'var(--color-fg)', whiteSpace: 'pre-wrap' }}>
                         {comment.content}
                     </div>
 
@@ -155,7 +159,7 @@ const CommentNode: React.FC<CommentNodeProps> = ({ comment, depth = 0, onReply }
                                         padding: '12px',
                                         borderRadius: '8px',
                                         border: '1px solid var(--color-grid)',
-                                        background: 'rgba(0,0,0,0.2)',
+                                        background: 'var(--color-bg)',
                                         color: 'var(--color-fg)',
                                         fontSize: '0.95rem',
                                         fontFamily: 'inherit',

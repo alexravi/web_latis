@@ -8,6 +8,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.tsx'
 import { ThemeProvider } from './context/ThemeContext'
+import { SocketProvider } from './context/SocketContext'
 import { queryClient } from './lib/react-query'
 
 createRoot(document.getElementById('root')!).render(
@@ -16,9 +17,11 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <HelmetProvider>
           <ThemeProvider>
-            <Toaster position="top-right" />
-            <App />
-            {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+            <SocketProvider>
+              <Toaster position="top-right" />
+              <App />
+              {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+            </SocketProvider>
           </ThemeProvider>
         </HelmetProvider>
       </BrowserRouter>

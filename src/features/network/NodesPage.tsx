@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import AppHeader from '../dashboard/AppHeader';
 import GridBackground from '../landing/GridBackground';
 import SEO from '../../components/SEO';
@@ -156,7 +156,7 @@ const NodesPage: React.FC = () => {
                                                             {name[0]}
                                                         </div>
                                                         <div>
-                                                            <div style={{ fontWeight: 600, fontSize: '1.05rem' }}>{name}</div>
+                                                            <Link to={`/${user.username || user.id}`} style={{ fontWeight: 600, fontSize: '1.05rem', color: 'inherit', textDecoration: 'none' }}>{name}</Link>
                                                             <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>{user.headline || 'Medical Professional'}</div>
                                                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                                                                 {/* Placeholder for mutuals */}
@@ -224,7 +224,7 @@ const NodesPage: React.FC = () => {
                                                 }}>
                                                     {peer.name[4]}
                                                 </div>
-                                                <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '4px' }}>{peer.name}</div>
+                                                <Link to={`/${peer.id}`} style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '4px', textDecoration: 'none', color: 'inherit', display: 'block' }}>{peer.name}</Link>
                                                 <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '12px' }}>{peer.role}</div>
                                                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '20px', height: '20px' }}>
                                                     {peer.reason}
@@ -302,7 +302,7 @@ const NodesPage: React.FC = () => {
                                                         {name[0]}
                                                     </div>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontSize: '0.95rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+                                                        <Link to={`/${node.username || node.id}`} style={{ fontSize: '0.95rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'inherit', textDecoration: 'none', display: 'block' }}>{name}</Link>
                                                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{node.headline || 'Medical Professional'}</div>
                                                     </div>
                                                     <div style={{
@@ -333,10 +333,11 @@ const NodesPage: React.FC = () => {
                             </div>
 
                         </div>
-                    )}
-                </main>
-            </div>
-        </div>
+                    )
+                    }
+                </main >
+            </div >
+        </div >
     );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 interface VoteButtonsProps {
     upvotes: number;
@@ -20,6 +20,11 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
     // Optimistic state
     const [optimisticVote, setOptimisticVote] = useState(userVote);
     const [optimisticScore, setOptimisticScore] = useState(upvotes - downvotes);
+
+    useEffect(() => {
+        setOptimisticVote(userVote);
+        setOptimisticScore(upvotes - downvotes);
+    }, [userVote, upvotes, downvotes]);
 
     const handleVote = useCallback(async (type: 'upvote' | 'downvote') => {
         // Calculate optimistic values

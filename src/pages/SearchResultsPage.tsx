@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { searchService } from '../services/searchService';
 import toast from 'react-hot-toast';
+import RelationshipManager from '../components/profile/RelationshipManager';
 
 const SearchResultsPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -76,8 +77,8 @@ const SearchResultsPage: React.FC = () => {
                             <h2>People</h2>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
                                 {results.people.map((person: any) => (
-                                    <Link key={person.id} to={`/profile/${person.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                        <div style={{ border: '1px solid var(--color-grid)', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                                    <Link key={person.id} to={`/${person.username || person.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                        <div style={{ border: '1px solid var(--color-grid)', padding: '15px', borderRadius: '8px', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                             <div style={{ width: '60px', height: '60px', background: '#ccc', borderRadius: '50%', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 {person.profile_image_url ? (
                                                     <img src={person.profile_image_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
@@ -86,7 +87,16 @@ const SearchResultsPage: React.FC = () => {
                                                 )}
                                             </div>
                                             <div style={{ fontWeight: 'bold' }}>{person.first_name} {person.last_name}</div>
-                                            <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{person.headline}</div>
+                                            <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '12px' }}>{person.headline}</div>
+
+                                            {/* Relationship Manager: Stop propagation to prevent navigation when clicking buttons */}
+                                            <div style={{ marginTop: 'auto' }} onClick={(e) => e.preventDefault()}>
+                                                <RelationshipManager
+                                                    userId={person.id}
+                                                    initialRelationship={person.relationship}
+                                                    layout="card"
+                                                />
+                                            </div>
                                         </div>
                                     </Link>
                                 ))}
@@ -103,7 +113,7 @@ const SearchResultsPage: React.FC = () => {
                                 {results.posts.map((post: any) => (
                                     <div key={post.id} style={{ border: '1px solid var(--color-grid)', padding: '15px', borderRadius: '8px' }}>
                                         <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                            <div style={{ fontWeight: 'bold' }}>{post.first_name} {post.last_name}</div>
+                                            <Link to={`/${post.username || post.user_id}`} style={{ fontWeight: 'bold', color: 'inherit', textDecoration: 'none' }}>{post.first_name} {post.last_name}</Link>
                                             <div style={{ color: 'var(--color-text-muted)' }}>{new Date(post.created_at).toLocaleDateString()}</div>
                                         </div>
                                         <div>{post.content}</div>
