@@ -14,7 +14,7 @@ export const getConversationDetails = async (conversationId: number | string): P
 };
 
 export const createConversation = async (recipientId: number | string): Promise<{ success: true; data: Conversation }> => {
-    const response = await api.post('/messages/conversations', { recipient_id: recipientId });
+    const response = await api.post('/messages/conversations', { recipient_id: Number(recipientId) });
     return response.data;
 };
 
@@ -48,7 +48,11 @@ interface SendMessagePayload {
 }
 
 export const sendMessage = async (conversationId: number | string, payload: SendMessagePayload): Promise<{ success: true; message: string; data: Message }> => {
-    const response = await api.post(`/messages/conversations/${conversationId}/messages`, payload);
+    // Backend validation requires conversation_id or recipient_id in body
+    const response = await api.post(`/messages/conversations/${conversationId}/messages`, {
+        conversation_id: Number(conversationId),
+        ...payload
+    });
     return response.data;
 };
 
@@ -56,7 +60,7 @@ export const sendMessageNew = async (recipientId: number | string, payload: Send
     // Alternative endpoint calling /messages directly if no conversation exists yet, OR createConversation then send.
     // The docs mentioned POST /api/messages as an alternative.
     const response = await api.post('/messages', {
-        recipient_id: recipientId,
+        recipient_id: Number(recipientId),
         ...payload
     });
     return response.data;

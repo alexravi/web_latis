@@ -71,7 +71,7 @@ const ConsultDrawer: React.FC<ConsultDrawerProps> = ({ isOpen, onClose }) => {
                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{consult.participants[0].name}</span>
+                                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{consult.participants[0]?.name || 'Unknown User'}</span>
                             </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {consult.lastMessage.content}

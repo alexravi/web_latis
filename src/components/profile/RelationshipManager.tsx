@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createConversation } from '../../services/messageService';
 import type { RelationshipStatus } from '../../types/relationship';
 import {
     sendConnectionRequest,
@@ -23,6 +25,7 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({ userId, initi
     // Local state to optimistic updates or manage simple transitions
     // However, since parent often controls data, we might just rely on props + local loading state
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
     const [relationship, setRelationship] = useState<RelationshipStatus | undefined>(initialRelationship);
 
     // Sync state if props change (optional, depends on if we want this component to own the state after init)
@@ -40,6 +43,19 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({ userId, initi
             console.error(error);
             toast.error(error.message || 'Action failed');
         } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleMessage = async () => {
+        setIsLoading(true);
+        try {
+            // Ensure userId is a number
+            const response = await createConversation(Number(userId));
+            navigate(`/messages?cid=${response.data.id}`);
+        } catch (error: any) {
+            console.error(error);
+            toast.error('Failed to start conversation');
             setIsLoading(false);
         }
     };
@@ -75,7 +91,12 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({ userId, initi
     if (relationship.isConnected) {
         return (
             <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="btn-primary" style={{ borderRadius: '24px' }}>
+                <button
+                    className="btn-primary"
+                    style={{ borderRadius: '24px' }}
+                    onClick={handleMessage}
+                    disabled={isLoading}
+                >
                     Message
                 </button>
                 <button
