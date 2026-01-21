@@ -3,6 +3,7 @@ import compression from 'compression';
 import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readFile } from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +20,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite in dev
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", process.env.VITE_API_BASE_URL || 'http://localhost:8080'],
+        connectSrc: ["'self'", process.env.VITE_API_BASE_URL],
         fontSrc: ["'self'", 'data:'],
       },
     },
@@ -52,25 +53,25 @@ setInterval(cleanupExpiredEntries, CLEANUP_INTERVAL);
 app.use((req, res, next) => {
   const ip = req.ip || req.connection.remoteAddress;
   const now = Date.now();
-  
+
   if (!requestCounts.has(ip)) {
     requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return next();
   }
-  
+
   const record = requestCounts.get(ip);
-  
+
   // If the window has expired, remove the entry and create a new one
   if (now > record.resetTime) {
     requestCounts.delete(ip);
     requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return next();
   }
-  
+
   if (record.count >= RATE_LIMIT_MAX) {
     return res.status(429).json({ error: 'Too many requests' });
   }
-  
+
   record.count++;
   next();
 });
@@ -92,10 +93,18 @@ app.use(express.static(path.join(__dirname, 'dist'), {
 }));
 
 // Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'), {
-    maxAge: '0', // Don't cache HTML
-  });
+app.get('*', async (req, res) => {
+  try {
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    let html = await readFile(indexPath, 'utf-8');
+    const envParams = { VITE_API_BASE_URL: process.env.VITE_API_BASE_URL };
+    const script = `<script>window.__ENV__ = ${JSON.stringify(envParams)};</script>`;
+    html = html.replace('</head>', `${script}</head>`);
+    res.send(html);
+  } catch (err) {
+    console.error('Error reading index.html', err);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 // Error handling middleware
@@ -105,5 +114,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

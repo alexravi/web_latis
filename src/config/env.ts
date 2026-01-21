@@ -17,8 +17,11 @@ const envSchema = z.object({
 // Validate environment variables - lenient in development
 const validateEnv = () => {
   try {
+    // Check for runtime injected vars (for production)
+    const runtimeEnv = (typeof window !== 'undefined' && (window as any).__ENV__) || {};
+    const mergedEnv = { ...import.meta.env, ...runtimeEnv };
     // Use passthrough to allow extra properties
-    return envSchema.passthrough().parse(import.meta.env);
+    return envSchema.passthrough().parse(mergedEnv);
   } catch (error) {
     // Only throw in production, warn in development
     if (import.meta.env.PROD) {
