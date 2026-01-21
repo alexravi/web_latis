@@ -11,6 +11,16 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Derive API origin for CSP
+let apiOrigin = '';
+try {
+  if (process.env.VITE_API_BASE_URL) {
+    apiOrigin = new URL(process.env.VITE_API_BASE_URL).origin;
+  }
+} catch (e) {
+  console.warn('Invalid VITE_API_BASE_URL for CSP:', process.env.VITE_API_BASE_URL);
+}
+
 // Security headers
 app.use(
   helmet({
@@ -20,7 +30,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite in dev
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", process.env.VITE_API_BASE_URL],
+        connectSrc: ["'self'", apiOrigin],
         fontSrc: ["'self'", 'data:'],
       },
     },
