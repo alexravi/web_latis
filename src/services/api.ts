@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -16,7 +16,7 @@ api.interceptors.request.use(
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         // Add AbortController signal if not already present
         if (!config.signal) {
             const controller = new AbortController();
@@ -24,7 +24,7 @@ api.interceptors.request.use(
             // Store controller for potential cancellation
             (config as any).__abortController = controller;
         }
-        
+
         return config;
     },
     (error) => {
@@ -66,22 +66,22 @@ api.interceptors.response.use(
                     window.location.href = '/login';
                 }
                 return Promise.reject(new Error('Session expired. Please log in again.'));
-            
+
             case 403:
                 return Promise.reject(new Error('You do not have permission to perform this action.'));
-            
+
             case 404:
                 return Promise.reject(new Error('Resource not found.'));
-            
+
             case 429:
                 return Promise.reject(new Error('Too many requests. Please try again later.'));
-            
+
             case 500:
             case 502:
             case 503:
             case 504:
                 return Promise.reject(new Error('Server error. Please try again later.'));
-            
+
             default:
                 // Extract error message from response if available
                 const message = (error.response.data as any)?.message || error.message || 'An error occurred';

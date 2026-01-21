@@ -24,7 +24,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         let newSocket: Socket | null = null;
 
         if (token) {
-            newSocket = io(import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:8080', {
+            newSocket = io(import.meta.env.VITE_API_BASE_URL?.replace('/api', ''), {
                 auth: { token },
                 autoConnect: true,
                 withCredentials: true
