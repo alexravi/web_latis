@@ -2,36 +2,202 @@ import React, { useState, useEffect } from 'react';
 import AppHeader from '../dashboard/AppHeader';
 import GridBackground from '../landing/GridBackground';
 import type { Consult, Message } from '../../types/ConsultTypes';
-import { getConsults, sendMessage } from '../../services/consultService';
+import { useNavigate } from 'react-router-dom';
+import { getConsults, getConsultMessages, sendMessage, markConsultAsRead } from '../../services/consultService';
+import { useSocket } from '../../context/SocketContext';
 import SEO from '../../components/SEO';
 
 const SecureConsultsPage: React.FC = () => {
+    const navigate = useNavigate();
+    const { socket } = useSocket();
     const [consults, setConsults] = useState<Consult[]>([]);
     const [activeConsultId, setActiveConsultId] = useState<string | null>(null);
     const [messageInput, setMessageInput] = useState('');
-
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [typingUsers, setTypingUsers] = useState<number[]>([]);
+    const messagesEndRef = React.useRef<HTMLDivElement>(null);
+    const typingTimeoutRef = React.useRef<any>(null);
 
     useEffect(() => {
+        // Get current user ID from localStorage or auth service
+        try {
+            const userJson = localStorage.getItem('user');
+            if (userJson) {
+                const user = JSON.parse(userJson);
+                setCurrentUserId(user.id?.toString() || null);
+            }
+        } catch (e) {
+            console.error("Failed to parse user from localstorage", e);
+        }
+
         const load = async () => {
             const data = await getConsults();
             setConsults(data);
             if (data.length > 0 && !activeConsultId) {
                 setActiveConsultId(data[0].id);
             }
-
         };
         load();
     }, []);
 
+    // Socket Events
+    useEffect(() => {
+        if (!socket) return;
+
+        if (activeConsultId) {
+            socket.emit('conversation:join', activeConsultId);
+            // Mark read when joining/opening
+            markConsultAsRead(activeConsultId);
+        }
+
+        const handleNewMessage = (data: any) => {
+            const rawMsg = data.message || data;
+            const convId = rawMsg.conversation_id?.toString() || activeConsultId;
+            const rawSenderId = rawMsg.sender_id?.toString();
+
+            // 1. Clear typing status for this sender immediately upon message receipt
+            if (rawSenderId) {
+                setTypingUsers(prev => prev.filter(id => id.toString() !== rawSenderId));
+            }
+
+            // Update consult list 
+            setConsults(prev => prev.map(c => {
+                if (c.id === convId) {
+                    const isCurrent = c.id === activeConsultId;
+                    const newMessage: Message = {
+                        id: rawMsg.id?.toString() || `socket-${Date.now()}`,
+                        senderId: rawSenderId || '',
+                        content: rawMsg.content || '',
+                        timestamp: rawMsg.created_at || new Date().toISOString(),
+                        isRead: isCurrent,
+                        attachments: rawMsg.attachment_url ? [rawMsg.attachment_url] : []
+                    };
+
+                    // Deduplication Logic
+                    const existingIndex = c.messages.findIndex(m => m.id === newMessage.id);
+                    if (existingIndex !== -1) return c;
+
+                    let newMessages = [...c.messages];
+                    const isMe = newMessage.senderId === currentUserId || newMessage.senderId === 'me';
+
+                    if (isMe) {
+                        // Find a temp message from me with same content
+                        const tempIndex = newMessages.findIndex(m =>
+                            m.id.startsWith('temp-') &&
+                            m.content === newMessage.content &&
+                            (m.senderId === currentUserId || m.senderId === 'me')
+                        );
+
+                        if (tempIndex !== -1) {
+                            newMessages[tempIndex] = newMessage;
+                        } else {
+                            newMessages.push(newMessage);
+                        }
+                    } else {
+                        newMessages.push(newMessage);
+                    }
+
+                    return {
+                        ...c,
+                        messages: isCurrent ? newMessages : c.messages,
+                        lastMessage: newMessage,
+                    };
+                }
+                return c;
+            }));
+
+            if (activeConsultId && convId === activeConsultId) {
+                markConsultAsRead(activeConsultId);
+            }
+        };
+
+        const handleTypingStatus = (data: { conversation_id: number, user_id: number, typing: boolean }) => {
+            // Ensure IDs are comparable (numbers vs strings)
+            if (activeConsultId && data.conversation_id.toString() === activeConsultId.toString()) {
+                setTypingUsers(prev => {
+                    if (data.typing) {
+                        // Add if not present
+                        return prev.some(id => id.toString() === data.user_id.toString())
+                            ? prev
+                            : [...prev, data.user_id];
+                    } else {
+                        // Remove
+                        return prev.filter(id => id.toString() !== data.user_id.toString());
+                    }
+                });
+            }
+        };
+
+        socket.on('message:new', handleNewMessage);
+        socket.on('typing:status', handleTypingStatus);
+
+        return () => {
+            if (activeConsultId) {
+                socket.emit('conversation:leave', activeConsultId);
+            }
+            socket.off('message:new', handleNewMessage);
+            socket.off('typing:status', handleTypingStatus);
+        };
+    }, [socket, activeConsultId, currentUserId]);
+
+    // Failsafe: Clear typing indicators every 5 seconds if no updates
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTypingUsers(prev => {
+                if (prev.length === 0) return prev;
+                // Just clear all as a fallback if they stick for too long (simple approach)
+                // A better approach would be to track timestamps per user, but for now this clears "stuck" states
+                return [];
+            });
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Fetch messages when active consult changes
+    useEffect(() => {
+        if (!activeConsultId) return;
+        setTypingUsers([]); // Clear typing on switch
+
+        const loadMessages = async () => {
+            try {
+                const msgs = await getConsultMessages(activeConsultId);
+                setConsults(prev => prev.map(c =>
+                    c.id === activeConsultId
+                        ? { ...c, messages: msgs }
+                        : c
+                ));
+            } catch (error) {
+                console.error("Failed to load consult messages", error);
+            }
+        };
+        loadMessages();
+    }, [activeConsultId]);
+
     const activeConsult = consults.find(c => c.id === activeConsultId);
+
+    const handleNewChat = () => {
+        // Redirect to main messaging for new chat flow as it has the full connection picker
+        navigate('/messaging?new=true');
+    };
+
+    const handleTyping = () => {
+        if (!socket || !activeConsultId) return;
+        socket.emit('message:typing:start', { conversation_id: Number(activeConsultId) });
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            socket.emit('message:typing:stop', { conversation_id: Number(activeConsultId) });
+        }, 3000);
+    };
 
     const handleSend = async () => {
         if (!messageInput.trim() || !activeConsultId) return;
 
+        const tempId = `temp-${Date.now()}`;
         // Optimistic update
         const tempMsg: Message = {
-            id: `temp-${Date.now()}`,
-            senderId: 'me',
+            id: tempId,
+            senderId: currentUserId || 'me',
             content: messageInput,
             timestamp: new Date().toISOString(),
             isRead: true
@@ -50,11 +216,33 @@ const SecureConsultsPage: React.FC = () => {
         setConsults(updatedConsults);
         setMessageInput('');
 
-        // API Call
-        await sendMessage(activeConsultId, messageInput);
+        try {
+            // API Call
+            await sendMessage(activeConsultId, tempMsg.content);
+            // If API returns the full message object, we can update the temp one
+            // Assuming response.data is the message object. 
+            // If response format is { success: true, data: Message }, great.
+            // If not, we rely on the socket to replace it eventually or just leave it.
+            // But to be safe vs socket race:
+            // if socket event came first, it replaced temp.
+            // if API returns now, we might want to ensure we have real ID.
+
+            // For now, let's just let socket handle replacement to avoid complexity race conditions,
+            // or if we really need to, we can update ID here.
+            // But since socket is reliable for "new message", dedupe logic in handleNewMessage is key.
+        } catch (e) {
+            console.error("Send failed", e);
+            // Ideally show error state on message
+        }
     };
 
 
+
+    useEffect(() => {
+        if (activeConsultId && messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [activeConsultId, consults]);
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
@@ -103,7 +291,7 @@ const SecureConsultsPage: React.FC = () => {
                             justifyContent: 'center',
                             cursor: 'pointer',
                             color: 'var(--color-text-main)'
-                        }} title="New Chat">
+                        }} title="New Chat" onClick={handleNewChat}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="9" y1="10" x2="15" y2="10"></line><line x1="12" y1="7" x2="12" y2="13"></line></svg>
                         </button>
                     </div>
@@ -125,7 +313,7 @@ const SecureConsultsPage: React.FC = () => {
                                     }}
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                        <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-fg)' }}>{consult.participants[0].name}</div>
+                                        <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-fg)' }}>{consult.participants[0]?.name || 'Unknown User'}</div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                                             {new Date(consult.lastMessage.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                         </div>
@@ -162,10 +350,10 @@ const SecureConsultsPage: React.FC = () => {
                             }}>
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{activeConsult.participants[0].name}</h2>
+                                        <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{activeConsult.participants[0]?.name || 'Unknown User'}</h2>
                                         {/* Optional: Show role if available */}
                                         <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 400 }}>
-                                            • {activeConsult.participants[0].role}
+                                            • {activeConsult.participants[0]?.role || 'User'}
                                         </span>
                                     </div>
 
@@ -180,7 +368,7 @@ const SecureConsultsPage: React.FC = () => {
                             {/* Messages Area */}
                             <div className="custom-scrollbar" style={{ flex: 1, padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {activeConsult.messages.map(msg => {
-                                    const isMe = msg.senderId === 'me';
+                                    const isMe = msg.senderId === currentUserId || msg.senderId === 'me';
                                     return (
                                         <div key={msg.id} style={{
                                             alignSelf: isMe ? 'flex-end' : 'flex-start',
@@ -208,6 +396,24 @@ const SecureConsultsPage: React.FC = () => {
                                         </div>
                                     );
                                 })}
+                                {typingUsers.filter(id => id.toString() !== currentUserId).length > 0 && (
+                                    <div style={{ alignSelf: 'flex-start', maxWidth: '70%' }}>
+                                        <div style={{
+                                            background: 'var(--color-bg)',
+                                            border: '1px solid var(--color-grid)',
+                                            padding: '12px 16px',
+                                            borderRadius: '12px 12px 12px 0',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                            display: 'flex', gap: '4px', alignItems: 'center'
+                                        }}>
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Typing...</span>
+                                            <div className="animate-pulse" style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--color-text-muted)' }}></div>
+                                            <div className="animate-pulse" style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--color-text-muted)', animationDelay: '0.1s' }}></div>
+                                            <div className="animate-pulse" style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--color-text-muted)', animationDelay: '0.2s' }}></div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={messagesEndRef} />
                             </div>
 
                             {/* Input Area */}
@@ -216,7 +422,10 @@ const SecureConsultsPage: React.FC = () => {
                                     <input
                                         type="text"
                                         value={messageInput}
-                                        onChange={(e) => setMessageInput(e.target.value)}
+                                        onChange={(e) => {
+                                            setMessageInput(e.target.value);
+                                            handleTyping();
+                                        }}
                                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                                         placeholder="Type a secure message..."
                                         style={{
