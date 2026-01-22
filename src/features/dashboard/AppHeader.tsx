@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { getProfile } from '../../services/profileService';
 
 import ConsultDrawer from '../messaging/ConsultDrawer';
+import SearchAutocomplete from '../../components/search/SearchAutocomplete';
 
 const AppHeader: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
@@ -56,13 +57,7 @@ const AppHeader: React.FC = () => {
     ];
 
 
-    const [searchQuery, setSearchQuery] = React.useState('');
-
-    const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-        }
-    };
+    // Search logic moved to SearchAutocomplete component
 
     return (
         <>
@@ -93,32 +88,8 @@ const AppHeader: React.FC = () => {
                         </div>
                     </Link>
 
-                    <div className="hide-on-mobile" style={{ position: 'relative' }}>
-                        <input
-                            type="text"
-                            placeholder="Search directory, drugs, or conditions..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={handleSearch}
-                            style={{
-                                background: 'var(--color-accent-subtle)',
-                                border: 'none',
-                                padding: '8px 16px',
-                                width: '300px',
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: '0.8rem',
-                                color: 'var(--color-fg)',
-                                outline: 'none'
-                            }}
-                        />
-                        <span style={{
-                            position: 'absolute',
-                            right: '12px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            fontSize: '0.8rem',
-                            opacity: 0.5
-                        }}>⌘K</span>
+                    <div className="hide-on-mobile">
+                        <SearchAutocomplete width="300px" />
                     </div>
                 </div>
 
