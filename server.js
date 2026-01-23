@@ -24,6 +24,12 @@ try {
   console.warn('Invalid API URL for CSP:', process.env.VITE_API_BASE_URL);
 }
 
+// Derive WebSocket origin
+let wsOrigin = '';
+if (apiOrigin) {
+  wsOrigin = apiOrigin.replace(/^http/, 'ws');
+}
+
 // Security headers
 app.use(
   helmet({
@@ -33,7 +39,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite in dev
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", apiOrigin],
+        connectSrc: ["'self'", apiOrigin, wsOrigin],
         fontSrc: ["'self'", 'data:'],
       },
     },
