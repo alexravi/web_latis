@@ -54,7 +54,7 @@ const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
 
         switch (type) {
             case 'people':
-                navigate(`/users/${id}`);
+                navigate(`/${id}`);
                 break;
             case 'companies':
             case 'colleges':

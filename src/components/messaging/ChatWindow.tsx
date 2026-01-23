@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import type { Message, Conversation } from '../../types/message';
 import { getMessages, getConversationDetails, sendMessage, markConversationRead } from '../../services/messageService';
 import { useSocket } from '../../context/SocketContext';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
+import MessageSkeleton from '../skeletons/MessageSkeleton';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ChatWindowProps {
@@ -16,38 +17,107 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, onBack, onMessa
     const [messages, setMessages] = useState<Message[]>([]);
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [offset, setOffset] = useState(0);
+    const MESSAGES_PER_PAGE = 20;
+
     const [typingUsers, setTypingUsers] = useState<number[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const prevScrollHeightRef = useRef<number>(0);
     const { socket } = useSocket();
 
     // Typing timeout ref
     const typingTimeoutRef = useRef<any>(null);
 
-    const loadData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [msgsRes, convRes] = await Promise.all([
-                getMessages(conversationId),
-                getConversationDetails(conversationId)
-            ]);
-            // Backend returns DESC (newest first), reverse for chronological order
-            setMessages([...msgsRes.data].reverse());
-            setConversation(convRes.data);
+    const loadData = useCallback(async (isInitial = true) => {
+        if (isInitial) {
+            setLoading(true);
+            setOffset(0);
+        } else {
+            setLoadingMore(true);
+        }
 
-            // Mark as read immediately
-            if (convRes.data.unread_count > 0) {
-                await markConversationRead(conversationId);
+        try {
+            const currentOffset = isInitial ? 0 : offset;
+
+            const promises: Promise<any>[] = [
+                getMessages(conversationId, MESSAGES_PER_PAGE, currentOffset)
+            ];
+
+            // Only fetch details on initial load
+            if (isInitial) {
+                promises.push(getConversationDetails(conversationId));
             }
+
+            const [msgsRes, convRes] = await Promise.all(promises);
+
+            // Backend returns DESC (newest first). 
+            // For correct chronological display, we reverse them.
+            // When paginating (getting older messages), they also come DESC (50...30).
+            // We reverse them to be (30...50) and prepend to current list.
+            const newMessages = [...msgsRes.data].reverse();
+
+            if (msgsRes.data.length < MESSAGES_PER_PAGE) {
+                setHasMore(false);
+            } else {
+                setHasMore(true);
+            }
+
+            if (isInitial) {
+                setMessages(newMessages);
+                if (convRes) {
+                    setConversation(convRes.data);
+                    if (convRes.data.unread_count > 0) {
+                        markConversationRead(conversationId);
+                    }
+                }
+                setTimeout(() => scrollToBottom(), 100);
+            } else {
+                // Capture scroll height before update to maintain position
+                if (messagesContainerRef.current) {
+                    prevScrollHeightRef.current = messagesContainerRef.current.scrollHeight;
+                }
+                setMessages(prev => [...newMessages, ...prev]);
+                setOffset(prev => prev + MESSAGES_PER_PAGE);
+            }
+
         } catch (err) {
             console.error("Failed to load chat", err);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
-    }, [conversationId]);
+    }, [conversationId, offset]);
+
+    // Independent scroll handler for pagination
+    const handleScroll = () => {
+        if (!messagesContainerRef.current) return;
+        const { scrollTop } = messagesContainerRef.current;
+
+        if (scrollTop === 0 && hasMore && !loading && !loadingMore) {
+            loadData(false);
+        }
+    };
+
+    // Maintain scroll position after loading older messages
+    useLayoutEffect(() => {
+        if (loadingMore || !messagesContainerRef.current || prevScrollHeightRef.current === 0) return;
+
+        // The DOM has been updated with new messages at the top.
+        // We need to jump down by the difference in height.
+        const newScrollHeight = messagesContainerRef.current.scrollHeight;
+        const scrollDiff = newScrollHeight - prevScrollHeightRef.current;
+
+        messagesContainerRef.current.scrollTop = scrollDiff;
+        prevScrollHeightRef.current = 0; // Reset
+
+    }, [messages]);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        loadData(true);
+    }, [conversationId]);
 
     useEffect(() => {
         if (!socket) return;
@@ -111,9 +181,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, onBack, onMessa
     }, [socket, conversationId]);
 
     // Scroll to bottom
-    useEffect(() => {
+    const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, typingUsers]);
+    };
+
+    // Scroll to bottom on new message sent/received (only if already near bottom or it's my message)
+    useEffect(() => {
+        // Simple heuristic: if it's a new message (length changed) and not loading history
+        // Note: checking loadingMore prevents scrolling to bottom when loading history
+        if (!loadingMore && messages.length > 0) {
+            const lastMsg = messages[messages.length - 1];
+            // If I sent it, always scroll
+            if (lastMsg.sender_id !== conversation?.other_participant?.id && lastMsg.sender_id !== conversation?.other_user?.id) {
+                scrollToBottom();
+            }
+        }
+    }, [messages.length, loadingMore]);
 
 
     const handleSendMessage = async (content: string) => {
@@ -154,11 +237,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, onBack, onMessa
         }, 3000);
     };
 
-    if (loading) {
+    if (loading && messages.length === 0) {
         return (
-            <div className="flex-1 flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900">
-                <div className="flex flex-col items-center gap-2">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex flex-col h-full bg-[#f8f9fa] dark:bg-[#0B1120]">
+                {/* Header Skeleton */}
+                <div className="px-6 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 z-10 h-[65px]">
+                    <div className="flex items-center gap-4 animate-pulse">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="space-y-2">
+                            <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-1 p-6">
+                    <MessageSkeleton />
                 </div>
             </div>
         );
@@ -221,8 +314,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, onBack, onMessa
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth bg-gray-50 dark:bg-gray-900/50">
+            <div
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth bg-gray-50 dark:bg-gray-900/50"
+            >
                 <div className="max-w-3xl mx-auto space-y-6">
+                    {/* Loading more indicator */}
+                    {loadingMore && (
+                        <div className="flex justify-center py-2">
+                            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    )}
+
                     {/* Conversation Start Date/Info could go here */}
 
                     {messages.map((msg, idx) => {

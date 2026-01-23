@@ -21,6 +21,11 @@ export interface UserProfile {
     [key: string]: any; // Allow flexibility
     relationship?: import('../types/relationship').RelationshipStatus;
     username?: string;
+    counts?: {
+        connections: number;
+        followers: number;
+        following: number;
+    };
 }
 
 export interface ExtendedProfile {
@@ -229,6 +234,29 @@ export const getUserProfileById = async (id: string | number) => {
     }
     return data;
 };
+
+export const getUserProfileByUsername = async (username: string) => {
+    // Attempt to fetch by username
+    // Assuming backend endpoint: /users/username/:username
+    const response = await api.get(`/users/username/${username}`);
+    const data = response.data;
+
+    // Normalize structure if needed, similar to getById
+    if (data.user) {
+        return {
+            user: data.user,
+            profile: data.user.profile || {},
+            experiences: [],
+            education: [],
+            skills: [],
+            certifications: [],
+            publications: [],
+            projects: [],
+            awards: []
+        };
+    }
+    return data;
+};
 // --- Granular APIs ---
 
 // Basic Info
@@ -238,7 +266,7 @@ export const updateBasicInfo = async (data: Partial<UserProfile> & Partial<Exten
     // and 'me' handles basic user fields.
 
     // 1. Update User fields (Headline, Location, etc.)
-    if (data.headline || data.location || data.current_role || data.specialization) {
+    if (data.headline || data.location || data.current_role || data.specialization || data.username) {
         await api.put('/users/me', data);
     }
 

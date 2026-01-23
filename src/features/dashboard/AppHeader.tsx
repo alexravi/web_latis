@@ -140,7 +140,7 @@ const AppHeader: React.FC = () => {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     </button>
 
-                    <Link to="/profile" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <Link to={userProfile?.user?.username ? `/${userProfile.user.username}` : (userProfile?.user?.id ? `/${userProfile.user.id}` : '/profile')} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{
                             textAlign: 'right',
                             fontSize: '0.8rem',
