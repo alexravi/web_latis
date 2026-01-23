@@ -11,14 +11,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+const DEFAULT_API_URL = 'https://backendlatis-g8eyhug8aherhzdy.southindia-01.azurewebsites.net/api';
+
 // Derive API origin for CSP
 let apiOrigin = '';
 try {
-  if (process.env.VITE_API_BASE_URL) {
-    apiOrigin = new URL(process.env.VITE_API_BASE_URL).origin;
+  const apiUrl = process.env.VITE_API_BASE_URL || DEFAULT_API_URL;
+  if (apiUrl) {
+    apiOrigin = new URL(apiUrl).origin;
   }
 } catch (e) {
-  console.warn('Invalid VITE_API_BASE_URL for CSP:', process.env.VITE_API_BASE_URL);
+  console.warn('Invalid API URL for CSP:', process.env.VITE_API_BASE_URL);
 }
 
 // Security headers
@@ -107,7 +110,7 @@ app.get('*', async (req, res) => {
   try {
     const indexPath = path.join(__dirname, 'dist', 'index.html');
     let html = await readFile(indexPath, 'utf-8');
-    const envParams = { VITE_API_BASE_URL: process.env.VITE_API_BASE_URL };
+    const envParams = { VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || DEFAULT_API_URL };
     const script = `<script>window.__ENV__ = ${JSON.stringify(envParams)};</script>`;
     html = html.replace('</head>', `${script}</head>`);
     res.send(html);
