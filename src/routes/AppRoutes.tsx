@@ -91,26 +91,8 @@ const AppRoutes = () => {
                         </ProtectedRoute>
                     }
                 />
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute>
-                            <Suspense fallback={<LoadingFallback message="Loading profile..." />}>
-                                <ProfileView />
-                            </Suspense>
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/users/:id"
-                    element={
-                        <ProtectedRoute>
-                            <Suspense fallback={<LoadingFallback message="Loading profile..." />}>
-                                <ProfileView />
-                            </Suspense>
-                        </ProtectedRoute>
-                    }
-                />
+
+
                 <Route
                     path="/complete-profile"
                     element={

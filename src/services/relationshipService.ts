@@ -34,8 +34,35 @@ export const cancelConnectionRequest = async (userId: number | string) => {
 };
 
 export const getConnections = async (status: 'connected' | 'pending') => {
-    const response = await api.get(`/users/me/connections`, { params: { status } });
-    return response.data;
+    try {
+        const response = await api.get(`/users/me/connections`, { params: { status } });
+        const data = response.data;
+
+        let connectionsList = [];
+        // Handle { success: true, data: [...] } structure
+        if (data && Array.isArray(data.data)) {
+            connectionsList = data.data;
+        } else if (Array.isArray(data)) {
+            connectionsList = data;
+        }
+
+        // Map API response to RelationshipUser interface
+        const mappedConnections = connectionsList.map((conn: any) => ({
+            id: conn.connection_id || conn.id, // Fallback to id if connection_id is missing, but API says connection_id
+            username: conn.connection_username,
+            first_name: conn.connection_first_name,
+            last_name: conn.connection_last_name,
+            profile_picture: conn.connection_profile_image,
+            headline: conn.headline, // Assuming headline might be available or undefined
+            // Include original fields if needed for debugging or other uses
+            ...conn
+        }));
+
+        return { count: mappedConnections.length, data: mappedConnections };
+    } catch (error) {
+        console.error(`[relationshipService] Error fetching connections (${status}):`, error);
+        throw error;
+    }
 };
 
 export const getIncomingRequests = async () => {
@@ -61,12 +88,32 @@ export const unfollowUser = async (userId: number | string) => {
 
 export const getFollowers = async (userId: number | string, limit = 50, offset = 0) => {
     const response = await api.get(`/users/${userId}/followers`, { params: { limit, offset } });
-    return response.data;
+    const data = response.data;
+
+    // Handle { success: true, data: [...] } structure
+    if (data && Array.isArray(data.data)) {
+        return { count: data.data.length, data: data.data, pagination: data.pagination };
+    }
+
+    if (Array.isArray(data)) {
+        return { count: data.length, data: data };
+    }
+    return data;
 };
 
 export const getFollowing = async (userId: number | string, limit = 50, offset = 0) => {
     const response = await api.get(`/users/${userId}/following`, { params: { limit, offset } });
-    return response.data;
+    const data = response.data;
+
+    // Handle { success: true, data: [...] } structure
+    if (data && Array.isArray(data.data)) {
+        return { count: data.data.length, data: data.data, pagination: data.pagination };
+    }
+
+    if (Array.isArray(data)) {
+        return { count: data.length, data: data };
+    }
+    return data;
 };
 
 // Blocks

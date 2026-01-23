@@ -103,10 +103,10 @@ export const getConsultMessages = async (
         const messages = Array.isArray(res) ? res : (res.data || []);
 
         return messages.map((msg: any) => ({
-            id: msg.id.toString(),
-            senderId: msg.sender_id.toString(),
-            content: msg.content,
-            timestamp: msg.created_at,
+            id: msg.id?.toString() || `msg-${Math.random()}`,
+            senderId: msg.sender_id?.toString() || '',
+            content: msg.content || '',
+            timestamp: msg.created_at || new Date().toISOString(),
             isRead: msg.is_read || false,
             attachments: msg.attachment_url ? [msg.attachment_url] : []
         }));

@@ -29,7 +29,7 @@ const NodesPage: React.FC = () => {
                 getConnections('connected')
             ]);
             setIncomingConsults(incoming.requests || []);
-            setMyNodes(connections.connections || []);
+            setMyNodes(connections.data || []);
         } catch (error) {
             console.error(error);
             toast.error('Failed to load network data');
