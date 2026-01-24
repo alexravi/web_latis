@@ -4,6 +4,7 @@ import GridBackground from '../features/landing/GridBackground';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
+import { signInWithGoogle } from '../services/authService';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -32,6 +33,27 @@ const Login: React.FC = () => {
         } catch (error: any) {
             console.error('Login error:', error);
             const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
+            toast.error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        try {
+            const idToken = await signInWithGoogle();
+            const response = await api.post('/auth/google', { token: idToken });
+
+            if (response.data.success) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                toast.success('Successfully logged in with Google');
+                navigate('/dashboard');
+            }
+        } catch (error: any) {
+            console.error('Google Login error:', error);
+            const message = error.response?.data?.message || 'Google Sign-In failed.';
             toast.error(message);
         } finally {
             setLoading(false);
@@ -141,6 +163,40 @@ const Login: React.FC = () => {
                             }}
                         >
                             {loading ? 'SIGNING IN...' : 'SECURE SIGN IN'}
+                        </button>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '0.5rem 0' }}>
+                            <div style={{ flex: 1, height: '1px', background: 'var(--color-grid)' }}></div>
+                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>OR</span>
+                            <div style={{ flex: 1, height: '1px', background: 'var(--color-grid)' }}></div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            disabled={loading}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                background: 'transparent',
+                                color: 'var(--color-text-main)',
+                                fontSize: '1rem',
+                                fontWeight: 500,
+                                border: '1px solid var(--color-grid)',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px'
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M23.52 12.29C23.52 11.43 23.47 10.73 23.32 10.01H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.95 21.1C22.2 19.01 23.52 15.92 23.52 12.29Z" fill="#4285F4" />
+                                <path d="M12 24C15.24 24 17.96 22.92 19.95 21.1L16.08 18.1C15 18.82 13.62 19.24 12 19.24C8.87 19.24 6.22 17.13 5.27 14.29L1.27 17.38C3.26 21.34 7.37 24 12 24Z" fill="#34A853" />
+                                <path d="M5.27 14.29C5.02 13.57 4.89 12.8 4.89 12C4.89 11.2 5.02 10.43 5.27 9.71L1.27 6.62C0.46 8.23 0 10.06 0 12C0 13.94 0.46 15.77 1.27 17.38L5.27 14.29Z" fill="#FBBC05" />
+                                <path d="M12 4.75C13.77 4.75 15.35 5.36 16.6 6.55L20.02 3.13C17.96 1.21 15.24 0 12 0C7.37 0 3.26 2.66 1.27 6.62L5.27 9.71C6.22 6.87 8.87 4.75 12 4.75Z" fill="#EA4335" />
+                            </svg>
+                            Sign in with Google
                         </button>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', fontSize: '0.9rem' }}>
