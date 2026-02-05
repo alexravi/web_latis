@@ -1,13 +1,30 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { Toaster } from 'react-hot-toast'
+import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.tsx'
+import { ThemeProvider } from './context/ThemeContext'
+import { SocketProvider } from './context/SocketContext'
+import { queryClient } from './lib/react-query'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <HelmetProvider>
+          <ThemeProvider>
+            <SocketProvider>
+              <Toaster position="top-right" />
+              <App />
+              {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+            </SocketProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   </StrictMode>,
 )
