@@ -25,7 +25,19 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         let newSocket: Socket | null = null;
 
         if (token) {
-            newSocket = io(env.VITE_API_BASE_URL?.replace('/api', ''), {
+            // Validate API URL before creating socket connection
+            if (!env.VITE_API_BASE_URL) {
+                console.error('[Socket] Cannot connect: VITE_API_BASE_URL is not configured');
+                return;
+            }
+
+            const socketUrl = env.VITE_API_BASE_URL.replace('/api', '');
+            if (!socketUrl) {
+                console.error('[Socket] Invalid socket URL derived from VITE_API_BASE_URL');
+                return;
+            }
+
+            newSocket = io(socketUrl, {
                 auth: { token },
                 autoConnect: true,
                 withCredentials: true

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 // Define environment variable schema for Vite build-time envs
 const envSchema = z.object({
+  // API URL is required in production, optional in development for local testing
   VITE_API_BASE_URL: z.string().url().optional(),
   VITE_FIREBASE_API_KEY: z.string(),
   VITE_FIREBASE_AUTH_DOMAIN: z.string(),
@@ -16,6 +17,7 @@ const envSchema = z.object({
 // Validate environment variables from import.meta.env only (static hosting)
 const validateEnv = () => {
   const parsed = envSchema.safeParse(import.meta.env);
+  const isProduction = import.meta.env.MODE === 'production';
 
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
@@ -26,12 +28,21 @@ const validateEnv = () => {
     console.error('❌ Missing required vars:', missingVars);
     console.error('❌ Available import.meta.env keys:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
 
-    if (import.meta.env.MODE === 'production') {
+    if (isProduction) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
   }
 
-  return parsed.success ? parsed.data : ({} as z.infer<typeof envSchema>);
+  const env = parsed.success ? parsed.data : ({} as z.infer<typeof envSchema>);
+
+  // Additional production-only validation for critical vars
+  if (isProduction) {
+    if (!env.VITE_API_BASE_URL) {
+      throw new Error('VITE_API_BASE_URL is required in production mode');
+    }
+  }
+
+  return env;
 };
 
 export const env = validateEnv();

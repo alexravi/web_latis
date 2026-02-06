@@ -1,8 +1,17 @@
 import axios, { AxiosError } from 'axios';
 import { env } from '../config/env';
 
+// Validate API base URL before creating axios instance
+if (!env.VITE_API_BASE_URL) {
+  const errorMsg = 'VITE_API_BASE_URL is not configured. Please set it in your environment variables.';
+  if (import.meta.env.MODE === 'production') {
+    throw new Error(errorMsg);
+  }
+  console.warn(`⚠️ ${errorMsg}`);
+}
+
 const api = axios.create({
-    baseURL: env.VITE_API_BASE_URL,
+    baseURL: env.VITE_API_BASE_URL || '/api', // Fallback to relative path in dev
     headers: {
         'Content-Type': 'application/json',
     },
