@@ -19,7 +19,9 @@ const validateEnv = () => {
 
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
-    const missingVars = Object.keys(fieldErrors).filter(key => fieldErrors[key]);
+    const missingVars = Object.entries(fieldErrors)
+      .filter(([, value]) => value && value.length > 0)
+      .map(([key]) => key);
     console.error('❌ Invalid env vars:', fieldErrors);
     console.error('❌ Missing required vars:', missingVars);
     console.error('❌ Available import.meta.env keys:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
