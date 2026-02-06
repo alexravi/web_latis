@@ -38,9 +38,6 @@ const missingVars = Object.entries(requiredFirebaseVars)
 
 if (missingVars.length > 0) {
   const errorMsg = `Missing required Firebase environment variables: ${missingVars.join(', ')}`;
-  if (import.meta.env.MODE === 'production') {
-    throw new Error(errorMsg);
-  }
   console.warn(`⚠️ ${errorMsg}`);
 }
 

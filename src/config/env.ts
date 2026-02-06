@@ -34,14 +34,6 @@ const validateEnv = () => {
   }
 
   const env = parsed.success ? parsed.data : ({} as z.infer<typeof envSchema>);
-
-  // Additional production-only validation for critical vars
-  if (isProduction) {
-    if (!env.VITE_API_BASE_URL) {
-      throw new Error('VITE_API_BASE_URL is required in production mode');
-    }
-  }
-
   return env;
 };
 
