@@ -4,17 +4,19 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [
     react(),
     // Bundle analyzer (only in build mode)
     process.env.ANALYZE === 'true' && visualizer({
-      open: true,
-      filename: 'dist/stats.html',
+      open: false,
+      filename: 'stats.html',
       gzipSize: true,
       brotliSize: true,
     }),
   ].filter(Boolean),
   build: {
+    outDir: 'dist',
     // Enable code splitting
     rollupOptions: {
       output: {
