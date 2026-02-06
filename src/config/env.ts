@@ -18,10 +18,14 @@ const validateEnv = () => {
   const parsed = envSchema.safeParse(import.meta.env);
 
   if (!parsed.success) {
-    console.error('❌ Invalid env vars:', parsed.error.flatten().fieldErrors);
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const missingVars = Object.keys(fieldErrors).filter(key => fieldErrors[key]);
+    console.error('❌ Invalid env vars:', fieldErrors);
+    console.error('❌ Missing required vars:', missingVars);
+    console.error('❌ Available import.meta.env keys:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
 
     if (import.meta.env.MODE === 'production') {
-      throw new Error('Missing required environment variables');
+      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
   }
 
