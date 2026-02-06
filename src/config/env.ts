@@ -24,17 +24,28 @@ const validateEnv = () => {
     const missingVars = Object.entries(fieldErrors)
       .filter(([, value]) => value && value.length > 0)
       .map(([key]) => key);
+
     console.error('❌ Invalid env vars:', fieldErrors);
     console.error('❌ Missing required vars:', missingVars);
-    console.error('❌ Available import.meta.env keys:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
+    console.error(
+      '❌ Available import.meta.env keys:',
+      Object.keys(import.meta.env).filter((k) => k.startsWith('VITE_')),
+    );
 
-    if (isProduction) {
-      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
-    }
+    const baseMessage = 'Invalid environment configuration';
+    const details = [
+      missingVars.length > 0 ? `Missing required variables: ${missingVars.join(', ')}` : null,
+      parsed.error?.message ? `Zod error: ${parsed.error.message}` : null,
+      isProduction ? 'Refusing to start in production with invalid env.' : null,
+    ]
+      .filter(Boolean)
+      .join(' | ');
+
+    throw new Error(details ? `${baseMessage} - ${details}` : baseMessage);
   }
 
-  const env = parsed.success ? parsed.data : ({} as z.infer<typeof envSchema>);
-  return env;
+  // At this point, parsing has succeeded and env is fully validated
+  return parsed.data;
 };
 
 export const env = validateEnv();

@@ -38,16 +38,17 @@ const missingVars = Object.entries(requiredFirebaseVars)
 
 if (missingVars.length > 0) {
   const errorMsg = `Missing required Firebase environment variables: ${missingVars.join(', ')}`;
-  console.warn(`⚠️ ${errorMsg}`);
+  console.error(`[Firebase] ${errorMsg}`);
+  throw new Error(errorMsg);
 }
 
 const firebaseConfig = {
-    apiKey: requiredFirebaseVars.apiKey!,
-    authDomain: requiredFirebaseVars.authDomain!,
-    projectId: requiredFirebaseVars.projectId!,
-    storageBucket: requiredFirebaseVars.storageBucket!,
-    messagingSenderId: requiredFirebaseVars.messagingSenderId!,
-    appId: requiredFirebaseVars.appId!,
+    apiKey: requiredFirebaseVars.apiKey,
+    authDomain: requiredFirebaseVars.authDomain,
+    projectId: requiredFirebaseVars.projectId,
+    storageBucket: requiredFirebaseVars.storageBucket,
+    messagingSenderId: requiredFirebaseVars.messagingSenderId,
+    appId: requiredFirebaseVars.appId,
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || undefined
 };
 
