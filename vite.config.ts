@@ -4,6 +4,7 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [
     react(),
     // Bundle analyzer (only in build mode)
@@ -15,6 +16,7 @@ export default defineConfig({
     }),
   ].filter(Boolean),
   build: {
+    outDir: 'dist',
     // Enable code splitting
     rollupOptions: {
       output: {
