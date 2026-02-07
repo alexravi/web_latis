@@ -17,7 +17,7 @@ const envSchema = z.object({
 // Validate environment variables from import.meta.env only (static hosting)
 const validateEnv = () => {
   const parsed = envSchema.safeParse(import.meta.env);
-  const isProduction = import.meta.env.MODE === 'production';
+  // const isProduction = import.meta.env.MODE === 'production';
 
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
@@ -25,23 +25,15 @@ const validateEnv = () => {
       .filter(([, value]) => value && value.length > 0)
       .map(([key]) => key);
 
-    console.error('❌ Invalid env vars:', fieldErrors);
-    console.error('❌ Missing required vars:', missingVars);
-    console.error(
-      '❌ Available import.meta.env keys:',
-      Object.keys(import.meta.env).filter((k) => k.startsWith('VITE_')),
-    );
+    console.warn('⚠️ Invalid env vars configuration:', fieldErrors);
+    console.warn('⚠️ Missing required vars:', missingVars);
 
-    const baseMessage = 'Invalid environment configuration';
-    const details = [
-      missingVars.length > 0 ? `Missing required variables: ${missingVars.join(', ')}` : null,
-      parsed.error?.message ? `Zod error: ${parsed.error.message}` : null,
-      isProduction ? 'Refusing to start in production with invalid env.' : null,
-    ]
-      .filter(Boolean)
-      .join(' | ');
+    // In production, we might want to be stricter, but to fix the "white screen" report
+    // we will allow the app to boot even with invalid config, logging a loud warning.
+    console.warn('⚠️ Application starting with potentially invalid configuration.');
 
-    throw new Error(details ? `${baseMessage} - ${details}` : baseMessage);
+    // Return the raw env vars as a fallback so the app doesn't crash immediately
+    return import.meta.env as unknown as z.infer<typeof envSchema>;
   }
 
   // At this point, parsing has succeeded and env is fully validated

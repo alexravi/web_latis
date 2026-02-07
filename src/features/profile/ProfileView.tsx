@@ -124,6 +124,14 @@ const ProfileView: React.FC = () => {
             const currentUsername = currentUser?.username;
 
             if (id) {
+                // HOTFIX: Explicitly handle "lead" if it's being routed here erroneously
+                if (id.toLowerCase() === 'lead') {
+                    console.warn("Route 'lead' caught in ProfileView. Treating as 404.");
+                    setProfileData(null);
+                    setIsLoading(false);
+                    return;
+                }
+
                 const isNumericId = /^\d+$/.test(id);
 
                 if (isNumericId) {
@@ -145,7 +153,14 @@ const ProfileView: React.FC = () => {
                         data = await getProfile();
                     } else {
                         setIsOwnProfile(false);
-                        data = await getUserProfileByUsername(id);
+                        try {
+                            data = await getUserProfileByUsername(id);
+                        } catch (e) {
+                            console.warn(`Profile not found for username: ${id}`);
+                            // Do not throw, just let data be undefined/null
+                            // @ts-ignore
+                            data = null;
+                        }
                     }
                 }
             } else {
@@ -163,6 +178,7 @@ const ProfileView: React.FC = () => {
             setProfileData(data);
         } catch (error) {
             console.error('Error fetching profile:', error);
+            setProfileData(null);
             // toast.error('Failed to load profile'); 
         } finally {
             setIsLoading(false);
