@@ -15,7 +15,8 @@ const SearchResultsPage = lazy(() => import('../pages/SearchResultsPage'));
 const SecureConsultsPage = lazy(() => import('../features/messaging/SecureConsultsPage'));
 const MessagingPage = lazy(() => import('../pages/MessagingPage'));
 const PostPage = lazy(() => import('../pages/PostPage'));
-
+const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('../pages/TermsOfService'));
 const AppRoutes = () => {
     return (
         <Suspense fallback={<LoadingFallback />}>
@@ -111,6 +112,26 @@ const AppRoutes = () => {
                                 <SearchResultsPage />
                             </Suspense>
                         </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/privacy"
+                    element={
+                        <PublicRoute>
+                            <Suspense fallback={<LoadingFallback message="Loading privacy policy..." />}>
+                                <PrivacyPolicy />
+                            </Suspense>
+                        </PublicRoute>
+                    }
+                />
+                <Route
+                    path="/terms"
+                    element={
+                        <PublicRoute>
+                            <Suspense fallback={<LoadingFallback message="Loading terms..." />}>
+                                <TermsOfService />
+                            </Suspense>
+                        </PublicRoute>
                     }
                 />
                 {/* Generic catch-all for user profiles at root level - MUST BE LAST */}

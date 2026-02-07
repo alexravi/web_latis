@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
     return (
@@ -6,6 +7,8 @@ const Footer: React.FC = () => {
             padding: '4rem 5vw',
             background: 'var(--color-fg)',
             color: 'var(--color-bg)',
+            position: 'relative',
+            zIndex: 10
         }}>
             <div className="grid-stack-mobile" style={{
                 display: 'grid',
@@ -22,14 +25,13 @@ const Footer: React.FC = () => {
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '2rem', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
-                    <a href="#" style={{ color: 'white' }}>Legal</a>
-                    <a href="#" style={{ color: 'white' }}>Privacy</a>
-                    <a href="#" style={{ color: 'white' }}>Contact</a>
+                    <Link to="/terms" style={{ color: 'white', textDecoration: 'none' }}>Terms</Link>
+                    <Link to="/privacy" style={{ color: 'white', textDecoration: 'none' }}>Privacy Policy</Link>
+                    <a href="mailto:contact@latis.com" style={{ color: 'white', textDecoration: 'none' }}>Contact</a>
                 </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.5, fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
-                <span>&copy; 2026 LATIS INC.</span>
-                <span>ALL RIGHTS RESERVED.</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.5, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <span>&copy; {new Date().getFullYear()} Latis under Deepa AI Private Limited. All rights reserved.</span>
             </div>
         </footer>
     );
